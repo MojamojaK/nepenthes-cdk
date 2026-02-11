@@ -1,0 +1,50 @@
+name: Deploy CDK
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    env:
+      PUSHOVER_API_KEY: ${{ secrets.PUSHOVER_API_KEY }}
+      PAGEE_USER_KEY: ${{ secrets.PAGEE_USER_KEY }}
+      EMAIL_ADDRESS: ${{ secrets.EMAIL_ADDRESS }}
+      SB_TOKEN: ${{ secrets.SB_TOKEN }}
+      SB_SECRET_KEY: ${{ secrets.SB_SECRET_KEY }}
+      SB_PI_DEVICE_ID: ${{ secrets.SB_PI_DEVICE_ID }}
+      SB_FAN_DEVICE_ID: ${{ secrets.SB_FAN_DEVICE_ID }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: us-west-2
+
+      - name: CDK diff
+        run: npx cdk diff
+
+      - name: CDK deploy
+        run: npx cdk deploy --all --require-approval never
