@@ -9,3 +9,7 @@ cdk.out
 
 .DS_Store
 .env.keys
+
+# Python / uv
+.venv
+__pycache__

@@ -1,4 +1,0 @@
-pytest
-moto[cloudwatch]
-boto3
-requests

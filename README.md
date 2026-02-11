@@ -17,6 +17,7 @@ AWS CDK infrastructure for the Nepenthes home monitoring system. Deploys Lambda 
 ## Prerequisites
 
 - [Node.js](https://nodejs.org/) >= 20
+- [uv](https://docs.astral.sh/uv/) (`brew install uv`)
 - [AWS CDK CLI](https://docs.aws.amazon.com/cdk/v2/guide/cli.html) (`npm install -g aws-cdk`)
 - [dotenvx](https://dotenvx.com/) (`brew install dotenvx/brew/dotenvx`)
 - AWS credentials configured (`aws configure` or environment variables)
@@ -76,7 +77,11 @@ npm run build
 ## Test
 
 ```sh
+# CDK (TypeScript) tests
 npm run test
+
+# Lambda (Python) tests
+cd lambda && uv run pytest tests/ -v
 ```
 
 ## Deploy
@@ -129,7 +134,8 @@ Secrets are decrypted in CI using the `DOTENV_PRIVATE_KEY` GitHub secret.
 │   ├── nepenthes_online_plug_status.py
 │   ├── nepenthes_pi_plug_on.py
 │   ├── cloudwatch.py
-│   └── switchbot.py
+│   ├── switchbot.py
+│   └── pyproject.toml             # Python dev dependencies (uv)
 ├── test/                         # Jest tests
 ├── .env                          # Encrypted secrets (safe to commit)
 ├── .github/workflows/deploy.yml  # CI/CD pipeline
@@ -145,6 +151,7 @@ Secrets are decrypted in CI using the `DOTENV_PRIVATE_KEY` GitHub secret.
 | `npm run build` | Compile TypeScript |
 | `npm run watch` | Watch mode — recompile on changes |
 | `npm run test` | Run Jest unit tests |
+| `cd lambda && uv run pytest tests/ -v` | Run Python unit tests |
 | `npx cdk synth` | Emit CloudFormation template |
 | `npx cdk diff` | Compare deployed stack with local |
 | `npx cdk deploy` | Deploy to AWS |
