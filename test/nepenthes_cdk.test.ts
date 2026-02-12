@@ -10,6 +10,19 @@ beforeAll(() => {
     template = Template.fromStack(stack);
 });
 
+describe('Constants', () => {
+    test('requireEnv throws when environment variable is missing', () => {
+        const original = process.env.PUSHOVER_API_KEY;
+        delete process.env.PUSHOVER_API_KEY;
+        expect(() => {
+            jest.isolateModules(() => {
+                require('../lib/constants');
+            });
+        }).toThrow('Missing required environment variable: PUSHOVER_API_KEY');
+        process.env.PUSHOVER_API_KEY = original;
+    });
+});
+
 describe('Lambda Functions', () => {
     test('creates 5 Lambda functions with Python 3.12 runtime', () => {
         template.resourceCountIs('AWS::Lambda::Function', 5);
