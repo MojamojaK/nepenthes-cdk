@@ -11,8 +11,8 @@ beforeAll(() => {
 });
 
 describe('Lambda Functions', () => {
-    test('creates 4 Lambda functions with Python 3.12 runtime', () => {
-        template.resourceCountIs('AWS::Lambda::Function', 4);
+    test('creates 5 Lambda functions with Python 3.12 runtime', () => {
+        template.resourceCountIs('AWS::Lambda::Function', 5);
 
         template.hasResourceProperties('AWS::Lambda::Function', {
             Runtime: 'python3.12',
@@ -51,21 +51,26 @@ describe('Lambda Functions', () => {
         });
     });
 
-    test('all functions use the requests layer', () => {
+    test('alarm email formatter function has correct handler', () => {
+        template.hasResourceProperties('AWS::Lambda::Function', {
+            Handler: 'nepenthes_alarm_email_formatter.lambda_handler',
+        });
+    });
+
+    test('functions that need requests use the requests layer', () => {
         const functions = template.findResources('AWS::Lambda::Function');
-        for (const [, resource] of Object.entries(functions)) {
+        const withLayer = Object.values(functions).filter((resource) => {
             const props = resource.Properties as Record<string, unknown>;
-            expect(props).toHaveProperty('Layers');
-            expect(props.Layers).toEqual(
-                expect.arrayContaining(['arn:aws:lambda:us-west-2:770693421928:layer:Klayers-p312-requests:2'])
-            );
-        }
+            return Array.isArray(props.Layers) &&
+                (props.Layers as string[]).includes('arn:aws:lambda:us-west-2:770693421928:layer:Klayers-p312-requests:2');
+        });
+        expect(withLayer.length).toBe(4);
     });
 });
 
 describe('Log Groups', () => {
-    test('creates 4 log groups with 60-day retention', () => {
-        template.resourceCountIs('AWS::Logs::LogGroup', 4);
+    test('creates 5 log groups with 60-day retention', () => {
+        template.resourceCountIs('AWS::Logs::LogGroup', 5);
 
         template.hasResourceProperties('AWS::Logs::LogGroup', {
             RetentionInDays: 60,
@@ -96,13 +101,13 @@ describe('EventBridge', () => {
 });
 
 describe('SNS Topics', () => {
-    test('creates 2 SNS topics', () => {
-        template.resourceCountIs('AWS::SNS::Topic', 2);
+    test('creates 3 SNS topics', () => {
+        template.resourceCountIs('AWS::SNS::Topic', 3);
     });
 
-    test('has email subscription', () => {
+    test('has email subscription on formatted alarm topic', () => {
         template.hasResourceProperties('AWS::SNS::Subscription', {
-            Protocol: 'email-json',
+            Protocol: 'email',
             Endpoint: 'test@example.com',
         });
     });

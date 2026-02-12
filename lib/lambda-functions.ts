@@ -9,6 +9,7 @@ export class LambdaFunctions {
 
     public nepenthesLogPullerFunction: lambda.Function;
     public nepenthesPushoverFunction: lambda.Function;
+    public nepenthesAlarmEmailFormatterFunction: lambda.Function;
     public nepenthesOnlinePlugStatusFunction: lambda.Function;
     public nepenthesPiPlugOnFunction: lambda.Function;
 
@@ -48,6 +49,17 @@ export class LambdaFunctions {
             }),
             retryAttempts: 1,
             layers: [requestsLayer3_12],
+        });
+
+        this.nepenthesAlarmEmailFormatterFunction = new lambda.Function(scope, 'NAlarmEmailFormatterLambda', {
+            runtime: lambda.Runtime.PYTHON_3_12,
+            handler: 'nepenthes_alarm_email_formatter.lambda_handler',
+            code: lambdaCode,
+            logGroup: new logs.LogGroup(scope, 'NAlarmEmailFormatterLogGroup', {
+                retention: logs.RetentionDays.TWO_MONTHS,
+                removalPolicy: RemovalPolicy.DESTROY,
+            }),
+            retryAttempts: 1,
         });
 
         this.nepenthesOnlinePlugStatusFunction = new lambda.Function(scope, "NOnlinePlugStatusLambda", {
