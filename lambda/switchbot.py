@@ -40,6 +40,9 @@ DEVICE_SEND_CMD_ENDPOINT_FORMAT = "https://api.switch-bot.com/v1.1/devices/{}/co
 
 _device_id_cache = {}
 
+def invalidate_device_id(name):
+    _device_id_cache.pop(name, None)
+
 def get_device_id(token, secret_key, name, type="Plug Mini (JP)"):
     if name in _device_id_cache:
         return _device_id_cache[name]
