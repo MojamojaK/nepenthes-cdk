@@ -58,8 +58,6 @@ export class LambdaFunctions {
             environment: {
                 "SB_TOKEN": CONSTANTS.SB_TOKEN,
                 "SB_SECRET_KEY": CONSTANTS.SB_SECRET_KEY,
-                "SB_PI_DEVICE_ID": CONSTANTS.SB_PI_DEVICE_ID,
-                "SB_FAN_DEVICE_ID": CONSTANTS.SB_FAN_DEVICE_ID,
                 "METRIC_NAMESPACE": CONSTANTS.METRIC_NAMESPACE,
             },
             logGroup: new logs.LogGroup(scope, 'NOnlinePlugStatusLogGroup', {
