@@ -52,8 +52,6 @@ AWS CDK infrastructure for the Nepenthes home monitoring system. Deploys Lambda 
    EMAIL_ADDRESS=your_email@example.com
    SB_TOKEN=your_switchbot_token
    SB_SECRET_KEY=your_switchbot_secret
-   SB_PI_DEVICE_ID=your_pi_device_id
-   SB_FAN_DEVICE_ID=your_fan_device_id
    EOF
 
    # Encrypt it

@@ -12,8 +12,6 @@ export const PAGEE_USER_KEY = requireEnv("PAGEE_USER_KEY");
 export const EMAIL_ADDRESS = requireEnv("EMAIL_ADDRESS");
 export const SB_TOKEN = requireEnv("SB_TOKEN");
 export const SB_SECRET_KEY = requireEnv("SB_SECRET_KEY");
-export const SB_PI_DEVICE_ID = requireEnv("SB_PI_DEVICE_ID");
-export const SB_FAN_DEVICE_ID = requireEnv("SB_FAN_DEVICE_ID");
 
 // Metric constants (not secrets)
 export const METRIC_NAMESPACE = "NHomeZero";

@@ -4,5 +4,3 @@ process.env.PAGEE_USER_KEY = 'test-pagee-key';
 process.env.EMAIL_ADDRESS = 'test@example.com';
 process.env.SB_TOKEN = 'test-sb-token';
 process.env.SB_SECRET_KEY = 'test-sb-secret';
-process.env.SB_PI_DEVICE_ID = 'test-pi-id';
-process.env.SB_FAN_DEVICE_ID = 'test-fan-id';

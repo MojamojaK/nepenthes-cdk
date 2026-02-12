@@ -4,6 +4,8 @@ import hmac
 import base64
 import uuid
 
+import requests
+
 def build_headers(token, secret_key):
     def make_secret(secret_key):
         secret_key = bytes(secret_key, 'utf-8')
@@ -35,3 +37,23 @@ def build_headers(token, secret_key):
 GET_DEVICES_ENDPOINT = "https://api.switch-bot.com/v1.1/devices"
 DEVICE_STATUS_ENDPOINT_FORMAT = "https://api.switch-bot.com/v1.1/devices/{}/status"
 DEVICE_SEND_CMD_ENDPOINT_FORMAT = "https://api.switch-bot.com/v1.1/devices/{}/commands"
+
+_device_id_cache = {}
+
+def get_device_id(token, secret_key, name, type="Plug Mini (JP)"):
+    if name in _device_id_cache:
+        return _device_id_cache[name]
+
+    response = requests.get(GET_DEVICES_ENDPOINT, headers=build_headers(token, secret_key), timeout=10).json()
+    if response.get("statusCode", 0) != 100:
+        raise RuntimeError("Unable to fetch Device IDs. Response: {}".format(response))
+    for d in response.get("body", {}).get("deviceList", []):
+        if not d["enableCloudService"]:
+            continue
+        if d["deviceType"] != type:
+            continue
+        _device_id_cache[d["deviceName"]] = d["deviceId"]
+
+    if name not in _device_id_cache:
+        raise RuntimeError("Unable to fetch Device ID of {}".format(name))
+    return _device_id_cache[name]
