@@ -13,3 +13,7 @@ cdk.out
 # Python / uv
 .venv
 __pycache__
+
+# Coverage
+coverage/
+.coverage
