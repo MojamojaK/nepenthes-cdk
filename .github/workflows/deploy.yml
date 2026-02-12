@@ -39,10 +39,10 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Run CDK tests
+      - name: Run CDK tests with coverage
         run: npm run test
 
-      - name: Run Python tests
+      - name: Run Python tests with coverage
         working-directory: lambda
         run: uv run pytest tests/ -v
 

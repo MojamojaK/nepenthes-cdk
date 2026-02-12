@@ -5,27 +5,7 @@ from unittest.mock import patch, MagicMock
 os.environ["PUSHOVER_API_KEY"] = "test-api-key"
 os.environ["PAGEE_USER_KEY"] = "test-user-key"
 
-from nepenthes_pushover import lambda_handler, _parse_message, _default
-
-
-class TestDefault:
-    def test_datetime_like_object(self):
-        mock_dt = MagicMock()
-        mock_dt.astimezone.return_value.isoformat.return_value = "2024-01-15T12:00:00+09:00"
-        result = _default(mock_dt)
-        assert result == "2024-01-15T12:00:00+09:00"
-
-    def test_non_datetime_object(self):
-        result = _default(42)
-        assert result == "42"
-
-
-class TestParseMessage:
-    def test_returns_valid_json(self):
-        event = {"key": "value"}
-        result = _parse_message(event)
-        parsed = json.loads(result)
-        assert parsed["Event"] == {"key": "value"}
+from nepenthes_pushover import lambda_handler
 
 
 class TestLambdaHandler:
@@ -36,7 +16,8 @@ class TestLambdaHandler:
         mock_response.text = '{"status": 1}'
         mock_post.return_value = mock_response
 
-        result = lambda_handler({"test": "event"}, None)
+        event = {"Records": [{"Sns": {"Subject": "ALARM", "Message": "{}"}}]}
+        lambda_handler(event, None)
 
         mock_post.assert_called_once()
         call_args = mock_post.call_args
@@ -55,6 +36,19 @@ class TestLambdaHandler:
         mock_response.text = '{"status": 1}'
         mock_post.return_value = mock_response
 
-        result = lambda_handler({}, None)
+        event = {"Records": [{"Sns": {"Subject": "ALARM", "Message": "{}"}}]}
+        result = lambda_handler(event, None)
         assert result["statusCode"] == 200
         assert result["body"]["status"] == 1
+
+    @patch("nepenthes_pushover.requests.post")
+    def test_handles_non_json_response(self, mock_post):
+        mock_response = MagicMock()
+        mock_response.status_code = 500
+        mock_response.text = "Internal Server Error"
+        mock_post.return_value = mock_response
+
+        event = {"Records": [{"Sns": {"Subject": "ALARM", "Message": "{}"}}]}
+        result = lambda_handler(event, None)
+        assert result["statusCode"] == 500
+        assert result["body"] == {"raw": "Internal Server Error"}
