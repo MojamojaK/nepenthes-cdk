@@ -18,7 +18,7 @@ DEVICES = [{
 }]
 
 def _get_device_id(name, type=DEVICE_TYPE_PLUG_MINI_JP):
-    response = requests.get(GET_DEVICES_ENDPOINT, headers=build_headers(SB_TOKEN, SB_SECRET_KEY)).json()
+    response = requests.get(GET_DEVICES_ENDPOINT, headers=build_headers(SB_TOKEN, SB_SECRET_KEY), timeout=10).json()
     if response.get("statusCode", 0) != 100:
         raise RuntimeError("Unable to fetch Device IDs. Response: {}".format(response))
     print(response)
@@ -34,7 +34,7 @@ def _get_device_id(name, type=DEVICE_TYPE_PLUG_MINI_JP):
 
 def _get_device_status(device_id):
     device_status_endpoint = DEVICE_STATUS_ENDPOINT_FORMAT.format(device_id)
-    response = requests.get(device_status_endpoint, headers=build_headers(SB_TOKEN, SB_SECRET_KEY)).json()
+    response = requests.get(device_status_endpoint, headers=build_headers(SB_TOKEN, SB_SECRET_KEY), timeout=10).json()
     if response.get("statusCode", 0) != 100:
         raise RuntimeError("Unable to status of device id: {}, response: {}".format(device_id, response))
     return response.get("body", {})

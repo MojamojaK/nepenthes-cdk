@@ -12,7 +12,7 @@ PI_DEVICE_NAME = "N. Pi"
 
 def _get_device_id(name, type=DEVICE_TYPE_PLUG_MINI_JP):
     headers=build_headers(SB_TOKEN, SB_SECRET_KEY)
-    response = requests.get(GET_DEVICES_ENDPOINT, headers=headers).json()
+    response = requests.get(GET_DEVICES_ENDPOINT, headers=headers, timeout=10).json()
     if response.get("statusCode", 0) != 100:
         raise RuntimeError("Unable to fetch Device IDs. Response: {}".format(response))
     for d in response.get("body", {}).get("deviceList", []):
@@ -28,7 +28,7 @@ def _get_device_id(name, type=DEVICE_TYPE_PLUG_MINI_JP):
 def _turn_plug_on(device_id):
     device_status_endpoint = DEVICE_SEND_CMD_ENDPOINT_FORMAT.format(device_id)
     headers=build_headers(SB_TOKEN, SB_SECRET_KEY)
-    response = requests.post(device_status_endpoint, headers=headers, json={
+    response = requests.post(device_status_endpoint, headers=headers, timeout=10, json={
         "command": "turnOn",
         "parameter": "default",
         "commandType": "command",

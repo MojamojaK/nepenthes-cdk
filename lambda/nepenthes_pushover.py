@@ -31,8 +31,12 @@ def lambda_handler(event, _):
         "expire": 900, # 15min
         "sound": "Narita",
     }
-    response = requests.post(API_URL, headers=headers, data=data)
+    response = requests.post(API_URL, headers=headers, data=data, timeout=10)
+    try:
+        body = json.loads(response.text)
+    except json.JSONDecodeError:
+        body = {"raw": response.text}
     return {
         'statusCode': response.status_code,
-        'body': json.loads(response.text)
+        'body': body
     }
