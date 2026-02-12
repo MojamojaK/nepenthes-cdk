@@ -6,12 +6,15 @@ AWS CDK infrastructure for the Nepenthes home monitoring system. Deploys Lambda 
 
 - **Lambda Functions** (Python 3.12)
   - `nepenthes_log_puller` — Processes IoT messages and publishes CloudWatch metrics
-  - `nepenthes_pushover` — Sends alarm notifications via Pushover
-  - `nepenthes_online_plug_status` — Checks SwitchBot smart plug status every 2 minutes
+  - `nepenthes_pushover` — Sends formatted alarm notifications via Pushover
+  - `nepenthes_alarm_email_formatter` — Formats CloudWatch alarms and republishes to a dedicated SNS topic for readable email delivery
+  - `nepenthes_online_plug_status` — Checks SwitchBot smart plug status every 2 minutes (discovers device IDs dynamically via SwitchBot API)
   - `nepenthes_pi_plug_on` — Powers on the Pi device via SwitchBot API when offline
+  - `alarm_formatter` — Shared module that parses raw CloudWatch alarm JSON into human-readable titles and bodies
+  - `switchbot` — SwitchBot API client with dynamic device ID discovery and caching
 - **AWS IoT** — Topic rule subscribing to `log/nepenthes/nhome`
 - **EventBridge** — Cron schedule (every 2 min) for plug status checks
-- **SNS** — Alarm notification topics (email + Pushover)
+- **SNS** — Alarm topic (triggers Pushover + email formatter Lambdas), formatted alarm topic (email delivery), and Pi low-severity topic
 - **CloudWatch Alarms** — Temperature, humidity, battery, heartbeat, plug power/status
 
 ## Prerequisites
@@ -74,11 +77,13 @@ npm run build
 
 ## Test
 
+Both CDK and Python tests enforce 80% code coverage thresholds.
+
 ```sh
-# CDK (TypeScript) tests
+# CDK (TypeScript) tests with coverage
 npm run test
 
-# Lambda (Python) tests
+# Lambda (Python) tests with coverage
 cd lambda && uv run pytest tests/ -v
 ```
 
@@ -101,10 +106,14 @@ npx cdk deploy
 Pushes to `main` trigger a GitHub Actions workflow that:
 
 1. Checks out the code
-2. Installs dotenvx and npm dependencies
+2. Installs uv, dotenvx, and npm dependencies
 3. Builds the TypeScript
-4. Authenticates to AWS via OIDC
-5. Runs `cdk diff` and `cdk deploy`
+4. Runs CDK tests (Jest) with coverage
+5. Runs Python tests (pytest) with coverage
+6. Authenticates to AWS via OIDC
+7. Runs `cdk diff` and `cdk deploy`
+
+Tests must pass before deployment proceeds.
 
 Secrets are decrypted in CI using the `DOTENV_PRIVATE_KEY` GitHub secret.
 
@@ -129,12 +138,15 @@ Secrets are decrypted in CI using the `DOTENV_PRIVATE_KEY` GitHub secret.
 ├── lambda/                       # Python Lambda function source code
 │   ├── nepenthes_log_puller.py
 │   ├── nepenthes_pushover.py
+│   ├── nepenthes_alarm_email_formatter.py
 │   ├── nepenthes_online_plug_status.py
 │   ├── nepenthes_pi_plug_on.py
+│   ├── alarm_formatter.py         # Shared alarm formatting logic
 │   ├── cloudwatch.py
-│   ├── switchbot.py
-│   └── pyproject.toml             # Python dev dependencies (uv)
-├── test/                         # Jest tests
+│   ├── switchbot.py               # SwitchBot API client with dynamic device discovery
+│   ├── tests/                     # Python unit tests (pytest)
+│   └── pyproject.toml             # Python dev dependencies and coverage config (uv)
+├── test/                         # CDK Jest tests
 ├── .env                          # Encrypted secrets (safe to commit)
 ├── .github/workflows/deploy.yml  # CI/CD pipeline
 ├── cdk.json                      # CDK configuration
@@ -148,8 +160,8 @@ Secrets are decrypted in CI using the `DOTENV_PRIVATE_KEY` GitHub secret.
 |---|---|
 | `npm run build` | Compile TypeScript |
 | `npm run watch` | Watch mode — recompile on changes |
-| `npm run test` | Run Jest unit tests |
-| `cd lambda && uv run pytest tests/ -v` | Run Python unit tests |
+| `npm run test` | Run CDK unit tests with coverage |
+| `cd lambda && uv run pytest tests/ -v` | Run Python unit tests with coverage |
 | `npx cdk synth` | Emit CloudFormation template |
 | `npx cdk diff` | Compare deployed stack with local |
 | `npx cdk deploy` | Deploy to AWS |
