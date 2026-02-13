@@ -74,4 +74,4 @@ def format_alarm(sns_record):
         f"Missing:   treated as {treat_missing}",
     ]
 
-    return {"title": title, "body": "\n".join(body_lines)}
+    return {"title": title, "body": "\n".join(body_lines), "state": new_state}
