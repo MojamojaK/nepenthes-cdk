@@ -28,7 +28,7 @@ export class NepenthesAlarms {
         const METERS = ["N. Meter 1", "N. Meter 2"]
 
         const highTemperatureAlarms = METERS.map((meterAlias) => {
-            const escapedAlias = meterAlias.replace(" ", "")
+            const escapedAlias = meterAlias.replace(/ /g, "")
             return new cdk.aws_cloudwatch.Alarm(scope, `${escapedAlias}TemperatureHighAlarm`, {
                 actionsEnabled: true,
                 datapointsToAlarm: 30,
@@ -49,7 +49,7 @@ export class NepenthesAlarms {
         });
 
         const lowTemperatureAlarms = METERS.map((meterAlias) => {
-            const escapedAlias = meterAlias.replace(" ", "")
+            const escapedAlias = meterAlias.replace(/ /g, "")
             return new cdk.aws_cloudwatch.Alarm(scope, `${escapedAlias}TemperatureLowAlarm`, {
                 actionsEnabled: true,
                 datapointsToAlarm: 30,
@@ -70,7 +70,7 @@ export class NepenthesAlarms {
         });
 
         const lowHumidityAlarms = METERS.map((meterAlias) => {
-            const escapedAlias = meterAlias.replace(" ", "")
+            const escapedAlias = meterAlias.replace(/ /g, "")
             return new cdk.aws_cloudwatch.Alarm(scope, `${escapedAlias}HumidityLowAlarm`, {
                 actionsEnabled: true,
                 datapointsToAlarm: 30,
@@ -91,7 +91,7 @@ export class NepenthesAlarms {
         });
 
         const lowBatteryAlarms = METERS.map((meterAlias) => {
-            const escapedAlias = meterAlias.replace(" ", "")
+            const escapedAlias = meterAlias.replace(/ /g, "")
             return new cdk.aws_cloudwatch.Alarm(scope, `${escapedAlias}BatteryLowAlarm`, {
                 actionsEnabled: true,
                 datapointsToAlarm: 1,
