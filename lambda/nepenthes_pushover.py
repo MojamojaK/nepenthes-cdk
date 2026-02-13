@@ -1,8 +1,11 @@
 import json
+import logging
 import os
 import requests
 
 from alarm_formatter import format_alarm
+
+logger = logging.getLogger(__name__)
 
 PUSHOVER_API_KEY = os.environ["PUSHOVER_API_KEY"]
 PAGEE_USER_KEY = os.environ["PAGEE_USER_KEY"]
@@ -10,14 +13,14 @@ API_URL = "https://api.pushover.net/1/messages.json"
 
 
 def lambda_handler(event, _):
-    print("Event: " + str(event))
+    logger.info("Event: %s", event)
 
     record = event.get("Records", [{}])[0]
     formatted = format_alarm(record)
 
     # Skip sending Pushover for OK (recovery) state transitions
     if formatted.get("state") == "OK":
-        print("Skipping Pushover for OK state")
+        logger.info("Skipping Pushover for OK state")
         return {"statusCode": 200, "body": "skipped OK state"}
 
     headers = {

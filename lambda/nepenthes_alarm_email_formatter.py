@@ -1,15 +1,18 @@
 import json
+import logging
 import os
 import boto3
 
 from alarm_formatter import format_alarm
+
+logger = logging.getLogger(__name__)
 
 FORMATTED_TOPIC_ARN = os.environ["FORMATTED_TOPIC_ARN"]
 sns_client = boto3.client("sns")
 
 
 def lambda_handler(event, _):
-    print("Event: " + str(event))
+    logger.info("Event: %s", event)
 
     record = event.get("Records", [{}])[0]
     formatted = format_alarm(record)
