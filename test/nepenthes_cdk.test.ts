@@ -70,14 +70,20 @@ describe('Lambda Functions', () => {
         });
     });
 
-    test('functions that need requests use the requests layer', () => {
+    test('all functions use ARM64 architecture', () => {
         const functions = template.findResources('AWS::Lambda::Function');
-        const withLayer = Object.values(functions).filter((resource) => {
+        for (const [, resource] of Object.entries(functions)) {
             const props = resource.Properties as Record<string, unknown>;
-            return Array.isArray(props.Layers) &&
-                (props.Layers as string[]).includes('arn:aws:lambda:us-west-2:770693421928:layer:Klayers-p312-requests:2');
-        });
-        expect(withLayer.length).toBe(4);
+            expect(props.Architectures).toEqual(['arm64']);
+        }
+    });
+
+    test('no functions use external Lambda layers', () => {
+        const functions = template.findResources('AWS::Lambda::Function');
+        for (const [, resource] of Object.entries(functions)) {
+            const props = resource.Properties as Record<string, unknown>;
+            expect(props.Layers).toBeUndefined();
+        }
     });
 });
 

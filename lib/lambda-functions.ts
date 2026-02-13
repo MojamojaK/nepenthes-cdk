@@ -2,8 +2,23 @@ import { Construct } from 'constructs';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as logs from 'aws-cdk-lib/aws-logs';
 import * as path from 'path';
-import { Duration, RemovalPolicy } from 'aws-cdk-lib';
+import { BundlingOutput, Duration, ILocalBundling, RemovalPolicy } from 'aws-cdk-lib';
+import { execSync } from 'child_process';
+import { copyFileSync, mkdirSync, readdirSync, statSync } from 'fs';
 import * as CONSTANTS from './constants';
+
+function copyDirRecursive(src: string, dest: string): void {
+    mkdirSync(dest, { recursive: true });
+    for (const entry of readdirSync(src)) {
+        const srcPath = path.join(src, entry);
+        const destPath = path.join(dest, entry);
+        if (statSync(srcPath).isDirectory()) {
+            copyDirRecursive(srcPath, destPath);
+        } else {
+            copyFileSync(srcPath, destPath);
+        }
+    }
+}
 
 export class LambdaFunctions {
 
@@ -14,13 +29,39 @@ export class LambdaFunctions {
     public nepenthesPiPlugOnFunction: lambda.Function;
 
     constructor(scope: Construct) {
-        const lambdaCode = lambda.Code.fromAsset(path.join(__dirname, '../lambda'));
+        const lambdaDir = path.join(__dirname, '../lambda');
+        const localBundling: ILocalBundling = {
+            tryBundle(outputDir: string): boolean {
+                try {
+                    execSync(`pip install requests -t "${outputDir}"`, { stdio: 'pipe' });
+                } catch {
+                    try {
+                        execSync(`pip3 install requests -t "${outputDir}"`, { stdio: 'pipe' });
+                    } catch {
+                        return false;
+                    }
+                }
+                copyDirRecursive(lambdaDir, outputDir);
+                return true;
+            },
+        };
 
-        const requestsLayer3_12 = lambda.LayerVersion.fromLayerVersionArn(scope,
-            "requestsLayer3_12", "arn:aws:lambda:us-west-2:770693421928:layer:Klayers-p312-requests:2");
+        const lambdaCode = lambda.Code.fromAsset(lambdaDir, {
+            bundling: {
+                image: lambda.Runtime.PYTHON_3_12.bundlingImage,
+                platform: 'linux/arm64',
+                command: [
+                    'bash', '-c',
+                    'pip install requests -t /asset-output && cp -au . /asset-output',
+                ],
+                outputType: BundlingOutput.NOT_ARCHIVED,
+                local: localBundling,
+            },
+        });
 
         this.nepenthesLogPullerFunction = new lambda.Function(scope, 'NLogPullerAssetLambda', {
             runtime: lambda.Runtime.PYTHON_3_12,
+            architecture: lambda.Architecture.ARM_64,
             handler: 'nepenthes_log_puller.lambda_handler',
             code: lambdaCode,
             timeout: Duration.seconds(7),
@@ -32,11 +73,11 @@ export class LambdaFunctions {
                 removalPolicy: RemovalPolicy.DESTROY,
             }),
             retryAttempts: 0,
-            layers: [requestsLayer3_12],
         });
 
         this.nepenthesPushoverFunction = new lambda.Function(scope, 'NPushoverAssetLambda', {
             runtime: lambda.Runtime.PYTHON_3_12,
+            architecture: lambda.Architecture.ARM_64,
             handler: 'nepenthes_pushover.lambda_handler',
             code: lambdaCode,
             environment: {
@@ -48,11 +89,11 @@ export class LambdaFunctions {
                 removalPolicy: RemovalPolicy.DESTROY,
             }),
             retryAttempts: 1,
-            layers: [requestsLayer3_12],
         });
 
         this.nepenthesAlarmEmailFormatterFunction = new lambda.Function(scope, 'NAlarmEmailFormatterLambda', {
             runtime: lambda.Runtime.PYTHON_3_12,
+            architecture: lambda.Architecture.ARM_64,
             handler: 'nepenthes_alarm_email_formatter.lambda_handler',
             code: lambdaCode,
             logGroup: new logs.LogGroup(scope, 'NAlarmEmailFormatterLogGroup', {
@@ -64,6 +105,7 @@ export class LambdaFunctions {
 
         this.nepenthesOnlinePlugStatusFunction = new lambda.Function(scope, "NOnlinePlugStatusLambda", {
             runtime: lambda.Runtime.PYTHON_3_12,
+            architecture: lambda.Architecture.ARM_64,
             handler: 'nepenthes_online_plug_status.lambda_handler',
             code: lambdaCode,
             timeout: Duration.seconds(10),
@@ -77,11 +119,11 @@ export class LambdaFunctions {
                 removalPolicy: RemovalPolicy.DESTROY,
             }),
             retryAttempts: 0,
-            layers: [requestsLayer3_12],
         });
 
         this.nepenthesPiPlugOnFunction = new lambda.Function(scope, "NPiPlugOnLambda", {
             runtime: lambda.Runtime.PYTHON_3_12,
+            architecture: lambda.Architecture.ARM_64,
             handler: 'nepenthes_pi_plug_on.lambda_handler',
             code: lambdaCode,
             timeout: Duration.seconds(10),
@@ -94,7 +136,6 @@ export class LambdaFunctions {
                 removalPolicy: RemovalPolicy.DESTROY,
             }),
             retryAttempts: 0,
-            layers: [requestsLayer3_12],
         });
     }
 }

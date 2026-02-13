@@ -2,6 +2,9 @@
 name = "nepenthes-lambda"
 version = "0.1.0"
 requires-python = ">=3.12"
+dependencies = [
+    "requests",
+]
 
 [dependency-groups]
 dev = [
@@ -9,7 +12,6 @@ dev = [
     "pytest-cov",
     "moto[cloudwatch]",
     "boto3",
-    "requests",
 ]
 
 [tool.pytest.ini_options]
