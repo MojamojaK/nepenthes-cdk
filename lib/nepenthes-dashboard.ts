@@ -8,7 +8,7 @@ export class NepenthesDashboard {
             dashboardName: 'NHome-Nepenthes',
         });
 
-        const METERS = ['Meter 1', 'Meter 2'];
+        const METERS = ['N. Meter 1', 'N. Meter 2'];
         const PLUGS = ['N.Pi', 'N.Fan'];
 
         // Temperature graph with alarm thresholds

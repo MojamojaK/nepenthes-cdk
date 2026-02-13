@@ -25,7 +25,7 @@ export class NepenthesAlarms {
             }),
         });
 
-        const METERS = ["Meter 1", "Meter 2"]
+        const METERS = ["N. Meter 1", "N. Meter 2"]
 
         const highTemperatureAlarms = METERS.map((meterAlias) => {
             const escapedAlias = meterAlias.replace(" ", "")
