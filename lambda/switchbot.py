@@ -1,3 +1,4 @@
+import logging
 import time
 import hashlib
 import hmac
@@ -5,6 +6,8 @@ import base64
 import uuid
 
 import requests
+
+logger = logging.getLogger(__name__)
 
 def build_headers(token, secret_key):
     def make_secret(secret_key):
@@ -60,3 +63,24 @@ def get_device_id(token, secret_key, name, type="Plug Mini (JP)"):
     if name not in _device_id_cache:
         raise RuntimeError("Unable to fetch Device ID of {}".format(name))
     return _device_id_cache[name]
+
+
+def call_with_retry(token, secret_key, device_name, operation, max_retries=2, base_delay=0.5):
+    """Call operation(device_id) with exponential backoff and cache invalidation on failure.
+
+    First attempt uses the (possibly cached) device ID. On failure, invalidates
+    the cache, waits with exponential backoff, and retries with a fresh device ID.
+    """
+    last_exception = None
+    for attempt in range(1 + max_retries):
+        if attempt > 0:
+            delay = base_delay * (2 ** (attempt - 1))
+            logger.warning("Retry %d/%d for %s after %.1fs backoff", attempt, max_retries, device_name, delay)
+            time.sleep(delay)
+            invalidate_device_id(device_name)
+        try:
+            device_id = get_device_id(token, secret_key, device_name)
+            return operation(device_id)
+        except Exception as e:
+            last_exception = e
+    raise last_exception

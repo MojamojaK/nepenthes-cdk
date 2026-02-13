@@ -1,7 +1,7 @@
 import os
 import requests
 
-from switchbot import build_headers, get_device_id, invalidate_device_id, DEVICE_SEND_CMD_ENDPOINT_FORMAT
+from switchbot import build_headers, call_with_retry, DEVICE_SEND_CMD_ENDPOINT_FORMAT
 
 SB_TOKEN = os.environ["SB_TOKEN"]
 SB_SECRET_KEY = os.environ["SB_SECRET_KEY"]
@@ -21,18 +21,4 @@ def _turn_plug_on(device_id):
     return response.get("body", {})
 
 def lambda_handler(event, context):
-    try:
-        pi_device_id = get_device_id(SB_TOKEN, SB_SECRET_KEY, PI_DEVICE_NAME)
-        try:
-            response = _turn_plug_on(pi_device_id)
-        except Exception:
-            print("Retrying with fresh device id for {}".format(PI_DEVICE_NAME))
-            invalidate_device_id(PI_DEVICE_NAME)
-            pi_device_id = get_device_id(SB_TOKEN, SB_SECRET_KEY, PI_DEVICE_NAME)
-            print("{} device id (refreshed): {}".format(PI_DEVICE_NAME, pi_device_id))
-            response = _turn_plug_on(pi_device_id)
-        print(response)
-    except Exception as e:
-        print(e)
-        raise e
-    return response
+    return call_with_retry(SB_TOKEN, SB_SECRET_KEY, PI_DEVICE_NAME, _turn_plug_on)

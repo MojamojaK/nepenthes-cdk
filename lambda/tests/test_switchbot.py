@@ -3,7 +3,7 @@ import hashlib
 import hmac
 import pytest
 from unittest.mock import patch, MagicMock
-from switchbot import build_headers, get_device_id, invalidate_device_id, _device_id_cache, GET_DEVICES_ENDPOINT, DEVICE_STATUS_ENDPOINT_FORMAT, DEVICE_SEND_CMD_ENDPOINT_FORMAT
+from switchbot import build_headers, get_device_id, invalidate_device_id, call_with_retry, _device_id_cache, GET_DEVICES_ENDPOINT, DEVICE_STATUS_ENDPOINT_FORMAT, DEVICE_SEND_CMD_ENDPOINT_FORMAT
 
 
 class TestBuildHeaders:
@@ -132,6 +132,72 @@ class TestInvalidateDeviceId:
         result = get_device_id("tok", "sec", "N. Pi")
         assert result == "pi-123"
         mock_get.assert_called_once()
+
+
+class TestCallWithRetry:
+    def setup_method(self):
+        _device_id_cache.clear()
+
+    @patch("switchbot.time.sleep")
+    @patch("switchbot.requests.get")
+    def test_succeeds_on_first_attempt(self, mock_get, mock_sleep):
+        mock_get.return_value = _make_api_response(FAKE_DEVICE_LIST)
+        operation = MagicMock(return_value="result")
+
+        result = call_with_retry("tok", "sec", "N. Pi", operation)
+
+        assert result == "result"
+        operation.assert_called_once_with("pi-123")
+        mock_sleep.assert_not_called()
+
+    @patch("switchbot.time.sleep")
+    @patch("switchbot.requests.get")
+    def test_retries_on_failure_and_succeeds(self, mock_get, mock_sleep):
+        mock_get.return_value = _make_api_response(FAKE_DEVICE_LIST)
+        operation = MagicMock(side_effect=[RuntimeError("fail"), "result"])
+
+        result = call_with_retry("tok", "sec", "N. Pi", operation)
+
+        assert result == "result"
+        assert operation.call_count == 2
+        mock_sleep.assert_called_once_with(0.5)
+
+    @patch("switchbot.time.sleep")
+    @patch("switchbot.requests.get")
+    def test_raises_after_all_retries_exhausted(self, mock_get, mock_sleep):
+        mock_get.return_value = _make_api_response(FAKE_DEVICE_LIST)
+        operation = MagicMock(side_effect=RuntimeError("persistent failure"))
+
+        with pytest.raises(RuntimeError, match="persistent failure"):
+            call_with_retry("tok", "sec", "N. Pi", operation)
+
+        assert operation.call_count == 3  # 1 initial + 2 retries
+
+    @patch("switchbot.time.sleep")
+    @patch("switchbot.requests.get")
+    def test_exponential_backoff_delays(self, mock_get, mock_sleep):
+        mock_get.return_value = _make_api_response(FAKE_DEVICE_LIST)
+        operation = MagicMock(side_effect=RuntimeError("fail"))
+
+        with pytest.raises(RuntimeError):
+            call_with_retry("tok", "sec", "N. Pi", operation)
+
+        assert mock_sleep.call_args_list[0].args[0] == 0.5
+        assert mock_sleep.call_args_list[1].args[0] == 1.0
+
+    @patch("switchbot.time.sleep")
+    @patch("switchbot.requests.get")
+    def test_invalidates_cache_before_retry(self, mock_get, mock_sleep):
+        mock_get.return_value = _make_api_response(FAKE_DEVICE_LIST)
+        operation = MagicMock(side_effect=[RuntimeError("fail"), "result"])
+        _device_id_cache["N. Pi"] = "stale-id"
+
+        result = call_with_retry("tok", "sec", "N. Pi", operation)
+
+        assert result == "result"
+        # First call uses stale cache, second call gets fresh ID from API
+        assert operation.call_args_list[0].args[0] == "stale-id"
+        assert operation.call_args_list[1].args[0] == "pi-123"
 
 
 class TestEndpoints:
