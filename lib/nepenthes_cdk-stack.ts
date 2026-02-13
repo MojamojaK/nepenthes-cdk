@@ -38,7 +38,7 @@ export class NepenthesCDKStack extends cdk.Stack {
     cdk.aws_cloudwatch.Metric.grantPutMetricData(lambdaFunctions.nepenthesOnlinePlugStatusFunction.grantPrincipal);
 
     // Setup Schedule to run Online Plug Status Lambda Function per cron schedule
-    const onlineMetricSchedule = new cdk.aws_events.Rule(this, "NOnlineMetricRule", {schedule: cdk.aws_events.Schedule.cron({minute: "*/2"})});
+    const onlineMetricSchedule = new cdk.aws_events.Rule(this, "NOnlineMetricRule", {schedule: cdk.aws_events.Schedule.cron({minute: "*/5"})});
     onlineMetricSchedule.addTarget(new cdk.aws_events_targets.LambdaFunction(lambdaFunctions.nepenthesOnlinePlugStatusFunction));
 
     // Setup SNS to alarm
