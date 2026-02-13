@@ -1,16 +1,14 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { METRIC_NAMESPACE, THRESHOLD_TEMPERATURE_HIGH, THRESHOLD_TEMPERATURE_LOW,
-         THRESHOLD_HUMIDITY_LOW, THRESHOLD_BATTERY_LOW } from './constants';
+         THRESHOLD_HUMIDITY_LOW, THRESHOLD_BATTERY_LOW,
+         METERS, PLUGS, FAN_PLUG_NAME } from './constants';
 
 export class NepenthesDashboard {
     constructor(scope: Construct, alarms: cdk.aws_cloudwatch.AlarmBase[]) {
         const dashboard = new cdk.aws_cloudwatch.Dashboard(scope, 'NHomeDashboard', {
             dashboardName: 'NHome-Nepenthes',
         });
-
-        const METERS = ['N. Meter 1', 'N. Meter 2'];
-        const PLUGS = ['N.Pi', 'N.Fan'];
 
         // Temperature graph with alarm thresholds
         const temperatureWidget = new cdk.aws_cloudwatch.GraphWidget({
@@ -101,10 +99,10 @@ export class NepenthesDashboard {
             left: [new cdk.aws_cloudwatch.Metric({
                 namespace: METRIC_NAMESPACE,
                 metricName: 'Power',
-                dimensionsMap: { Plug: 'N.Fan' },
+                dimensionsMap: { Plug: FAN_PLUG_NAME },
                 period: cdk.Duration.minutes(5),
                 statistic: cdk.aws_cloudwatch.Stats.AVERAGE,
-                label: 'N.Fan',
+                label: FAN_PLUG_NAME,
             })],
             width: 6,
             height: 3,

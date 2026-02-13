@@ -28,3 +28,9 @@ export const THRESHOLD_TEMPERATURE_HIGH = 26.0;
 export const THRESHOLD_TEMPERATURE_LOW = 10.0;
 export const THRESHOLD_HUMIDITY_LOW = 50.0;
 export const THRESHOLD_BATTERY_LOW = 5;
+
+// Device names (single source of truth for alarms, dashboard, and Lambda config)
+export const METERS = ["N. Meter 1", "N. Meter 2"];
+export const PLUGS = ["N.Pi", "N.Fan"];
+export const PI_PLUG_NAME = "N.Pi";
+export const FAN_PLUG_NAME = "N.Fan";
