@@ -1,5 +1,8 @@
 import boto3
 import datetime
+import logging
+
+logger = logging.getLogger(__name__)
 
 cloud_watch = boto3.client('cloudwatch')
 
@@ -8,7 +11,6 @@ def put_cloudwatch(metricNamespace, metricName, value, unit, timestamp=None, dim
     value = (1 if value else 0) if type(value) == bool else value
     if not timestamp:
         timestamp = datetime.datetime.now()
-    # print(metricName + ", " + str(value) + ", " + unit + ", " + timestamp.isoformat())
     try:
         data = {
             "MetricName" : metricName,
@@ -23,5 +25,5 @@ def put_cloudwatch(metricNamespace, metricName, value, unit, timestamp=None, dim
             MetricData = [data]
         )
     except Exception as e:
-        print(e)
+        logger.error("Failed to put metric %s: %s", metricName, e)
         raise

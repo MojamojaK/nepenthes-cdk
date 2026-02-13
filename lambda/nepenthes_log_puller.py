@@ -1,11 +1,14 @@
 import datetime
+import logging
 import os
 from cloudwatch import put_cloudwatch
 
+logger = logging.getLogger(__name__)
+
 METRIC_NAMESPACE = os.environ["METRIC_NAMESPACE"]
-    
+
 def lambda_handler(event, context):
-    print("Event: " + str(event))
+    logger.info("Event: %s", event)
     meters = event.get("meters", {}).get("v0", {})
     plugs = event.get("plugs", {}).get("v0", {})
     should_heartbeat = event["should_heartbeat"]
