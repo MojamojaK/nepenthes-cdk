@@ -3,7 +3,7 @@ import { Construct } from 'constructs';
 import { METRIC_NAMESPACE } from './constants';
 
 export class NepenthesDashboard {
-    constructor(scope: Construct) {
+    constructor(scope: Construct, alarms: cdk.aws_cloudwatch.AlarmBase[]) {
         const dashboard = new cdk.aws_cloudwatch.Dashboard(scope, 'NHomeDashboard', {
             dashboardName: 'NHome-Nepenthes',
         });
@@ -112,7 +112,7 @@ export class NepenthesDashboard {
         // Alarm status overview
         const alarmWidget = new cdk.aws_cloudwatch.AlarmStatusWidget({
             title: 'Alarm Status',
-            alarms: [],  // Will be populated after alarms are created
+            alarms: alarms,
             width: 12,
             height: 3,
         });
