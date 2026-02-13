@@ -54,6 +54,11 @@ export class NepenthesCDKStack extends cdk.Stack {
     lambdaFunctions.nepenthesAlarmEmailFormatterFunction.addEnvironment("FORMATTED_TOPIC_ARN", formattedAlarmSNSTopic.topicArn);
     alarmSNSTopic.addSubscription(new cdk.aws_sns_subscriptions.LambdaSubscription(lambdaFunctions.nepenthesAlarmEmailFormatterFunction));
 
+    // Send recovery (OK) notifications via email only (not Pushover)
+    const okActionSNSTopic = new cdk.aws_sns.Topic(this, "NOkActionTopic");
+    okActionSNSTopic.addSubscription(new cdk.aws_sns_subscriptions.LambdaSubscription(lambdaFunctions.nepenthesAlarmEmailFormatterFunction));
+    nepenthesAlams.alarms.forEach((alarm) => alarm.addOkAction(new cdk.aws_cloudwatch_actions.SnsAction(okActionSNSTopic)));
+
     // Setup trigger lambda when N.Pi is offline for 5 minutes
     const nPiInvalidLowSevSNSTopic = new cdk.aws_sns.Topic(this, "NPiInvalidLowSevTopic");
     nPiInvalidLowSevSNSTopic.addSubscription(new cdk.aws_sns_subscriptions.LambdaSubscription(lambdaFunctions.nepenthesPiPlugOnFunction));
