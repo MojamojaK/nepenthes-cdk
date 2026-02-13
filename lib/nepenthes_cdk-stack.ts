@@ -3,6 +3,7 @@ import { Construct } from 'constructs';
 import { LambdaFunctions } from './lambda-functions';
 import { EMAIL_ADDRESS, METRIC_NAMESPACE, METRIC_NAME_VALID } from './constants';
 import { NepenthesAlarms } from './nepenthes-alarms';
+import { NepenthesDashboard } from './nepenthes-dashboard';
 
 export class NepenthesCDKStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -58,5 +59,8 @@ export class NepenthesCDKStack extends cdk.Stack {
     const nPiInvalidLowSevSNSTopic = new cdk.aws_sns.Topic(this, "NPiInvalidLowSevTopic");
     nPiInvalidLowSevSNSTopic.addSubscription(new cdk.aws_sns_subscriptions.LambdaSubscription(lambdaFunctions.nepenthesPiPlugOnFunction));
     nepenthesAlams.nPiInvalidLowSevAlarm.addAlarmAction(new cdk.aws_cloudwatch_actions.SnsAction(nPiInvalidLowSevSNSTopic));
+
+    // CloudWatch Dashboard for at-a-glance monitoring
+    new NepenthesDashboard(this);
   }
 }

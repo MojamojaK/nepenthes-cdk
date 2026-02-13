@@ -202,3 +202,13 @@ describe('CloudWatch Alarms', () => {
         }
     });
 });
+
+describe('Dashboard', () => {
+    test('creates a CloudWatch dashboard', () => {
+        template.resourceCountIs('AWS::CloudWatch::Dashboard', 1);
+
+        template.hasResourceProperties('AWS::CloudWatch::Dashboard', {
+            DashboardName: 'NHome-Nepenthes',
+        });
+    });
+});
