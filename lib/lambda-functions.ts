@@ -60,7 +60,7 @@ export class LambdaFunctions {
 
         const lambdaCode = lambda.Code.fromAsset(lambdaDir, {
             bundling: {
-                image: lambda.Runtime.PYTHON_3_13.bundlingImage,
+                image: lambda.Runtime.PYTHON_3_14.bundlingImage,
                 platform: 'linux/arm64',
                 command: [
                     'bash', '-c',
@@ -76,7 +76,7 @@ export class LambdaFunctions {
             removalPolicy: RemovalPolicy.DESTROY,
         });
         this.nepenthesLogPullerFunction = new lambda.Function(scope, 'NLogPullerAssetLambda', {
-            runtime: lambda.Runtime.PYTHON_3_13,
+            runtime: lambda.Runtime.PYTHON_3_14,
             architecture: lambda.Architecture.ARM_64,
             handler: 'nepenthes_log_puller.lambda_handler',
             code: lambdaCode,
@@ -94,7 +94,7 @@ export class LambdaFunctions {
             removalPolicy: RemovalPolicy.DESTROY,
         });
         this.nepenthesPushoverFunction = new lambda.Function(scope, 'NPushoverAssetLambda', {
-            runtime: lambda.Runtime.PYTHON_3_13,
+            runtime: lambda.Runtime.PYTHON_3_14,
             architecture: lambda.Architecture.ARM_64,
             handler: 'nepenthes_pushover.lambda_handler',
             code: lambdaCode,
@@ -112,7 +112,7 @@ export class LambdaFunctions {
             removalPolicy: RemovalPolicy.DESTROY,
         });
         this.nepenthesAlarmEmailFormatterFunction = new lambda.Function(scope, 'NAlarmEmailFormatterLambda', {
-            runtime: lambda.Runtime.PYTHON_3_13,
+            runtime: lambda.Runtime.PYTHON_3_14,
             architecture: lambda.Architecture.ARM_64,
             handler: 'nepenthes_alarm_email_formatter.lambda_handler',
             code: lambdaCode,
@@ -126,7 +126,7 @@ export class LambdaFunctions {
             removalPolicy: RemovalPolicy.DESTROY,
         });
         this.nepenthesOnlinePlugStatusFunction = new lambda.Function(scope, "NOnlinePlugStatusLambda", {
-            runtime: lambda.Runtime.PYTHON_3_13,
+            runtime: lambda.Runtime.PYTHON_3_14,
             architecture: lambda.Architecture.ARM_64,
             handler: 'nepenthes_online_plug_status.lambda_handler',
             code: lambdaCode,
@@ -146,7 +146,7 @@ export class LambdaFunctions {
             removalPolicy: RemovalPolicy.DESTROY,
         });
         this.nepenthesPiPlugOnFunction = new lambda.Function(scope, "NPiPlugOnLambda", {
-            runtime: lambda.Runtime.PYTHON_3_13,
+            runtime: lambda.Runtime.PYTHON_3_14,
             architecture: lambda.Architecture.ARM_64,
             handler: 'nepenthes_pi_plug_on.lambda_handler',
             code: lambdaCode,
