@@ -1,6 +1,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
-import { METRIC_NAMESPACE } from './constants';
+import { METRIC_NAMESPACE, THRESHOLD_TEMPERATURE_HIGH, THRESHOLD_TEMPERATURE_LOW,
+         THRESHOLD_HUMIDITY_LOW, THRESHOLD_BATTERY_LOW } from './constants';
 
 export class NepenthesDashboard {
     constructor(scope: Construct, alarms: cdk.aws_cloudwatch.AlarmBase[]) {
@@ -23,8 +24,8 @@ export class NepenthesDashboard {
                 label: meter,
             })),
             leftAnnotations: [
-                { value: 26, color: '#d62728', label: 'High threshold' },
-                { value: 10, color: '#1f77b4', label: 'Low threshold' },
+                { value: THRESHOLD_TEMPERATURE_HIGH, color: '#d62728', label: 'High threshold' },
+                { value: THRESHOLD_TEMPERATURE_LOW, color: '#1f77b4', label: 'Low threshold' },
             ],
             width: 12,
             height: 6,
@@ -42,7 +43,7 @@ export class NepenthesDashboard {
                 label: meter,
             })),
             leftAnnotations: [
-                { value: 50, color: '#ff7f0e', label: 'Low threshold' },
+                { value: THRESHOLD_HUMIDITY_LOW, color: '#ff7f0e', label: 'Low threshold' },
             ],
             width: 12,
             height: 6,
@@ -60,7 +61,7 @@ export class NepenthesDashboard {
                 label: meter,
             })),
             leftAnnotations: [
-                { value: 5, color: '#d62728', label: 'Low threshold' },
+                { value: THRESHOLD_BATTERY_LOW, color: '#d62728', label: 'Low threshold' },
             ],
             width: 12,
             height: 6,

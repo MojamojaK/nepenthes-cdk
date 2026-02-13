@@ -1,7 +1,9 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { METRIC_NAMESPACE, METRIC_NAME_BATTERY, METRIC_NAME_HEARTBEAT, METRIC_NAME_HUMIDITY,
-         METRIC_NAME_POWER, METRIC_NAME_SWITCH, METRIC_NAME_TEMPERATURE } from './constants';
+         METRIC_NAME_POWER, METRIC_NAME_SWITCH, METRIC_NAME_TEMPERATURE,
+         THRESHOLD_TEMPERATURE_HIGH, THRESHOLD_TEMPERATURE_LOW,
+         THRESHOLD_HUMIDITY_LOW, THRESHOLD_BATTERY_LOW } from './constants';
 
 
 export class NepenthesAlarms {
@@ -35,7 +37,7 @@ export class NepenthesAlarms {
                 evaluationPeriods: 30,
                 treatMissingData: cdk.aws_cloudwatch.TreatMissingData.IGNORE,
                 comparisonOperator:  cdk.aws_cloudwatch.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
-                threshold: 26.0,
+                threshold: THRESHOLD_TEMPERATURE_HIGH,
                 metric: new cdk.aws_cloudwatch.Metric({
                     namespace: METRIC_NAMESPACE,
                     metricName: METRIC_NAME_TEMPERATURE,
@@ -56,7 +58,7 @@ export class NepenthesAlarms {
                 evaluationPeriods: 30,
                 treatMissingData: cdk.aws_cloudwatch.TreatMissingData.IGNORE,
                 comparisonOperator:  cdk.aws_cloudwatch.ComparisonOperator.LESS_THAN_OR_EQUAL_TO_THRESHOLD,
-                threshold: 10.0,
+                threshold: THRESHOLD_TEMPERATURE_LOW,
                 metric: new cdk.aws_cloudwatch.Metric({
                     namespace: METRIC_NAMESPACE,
                     metricName: METRIC_NAME_TEMPERATURE,
@@ -77,7 +79,7 @@ export class NepenthesAlarms {
                 evaluationPeriods: 30,
                 treatMissingData: cdk.aws_cloudwatch.TreatMissingData.IGNORE,
                 comparisonOperator:  cdk.aws_cloudwatch.ComparisonOperator.LESS_THAN_OR_EQUAL_TO_THRESHOLD,
-                threshold: 50.0,
+                threshold: THRESHOLD_HUMIDITY_LOW,
                 metric: new cdk.aws_cloudwatch.Metric({
                     namespace: METRIC_NAMESPACE,
                     metricName: METRIC_NAME_HUMIDITY,
@@ -98,7 +100,7 @@ export class NepenthesAlarms {
                 evaluationPeriods: 24,
                 treatMissingData: cdk.aws_cloudwatch.TreatMissingData.IGNORE,
                 comparisonOperator:  cdk.aws_cloudwatch.ComparisonOperator.LESS_THAN_OR_EQUAL_TO_THRESHOLD,
-                threshold: 5,
+                threshold: THRESHOLD_BATTERY_LOW,
                 metric: new cdk.aws_cloudwatch.Metric({
                     namespace: METRIC_NAMESPACE,
                     metricName: METRIC_NAME_BATTERY,
