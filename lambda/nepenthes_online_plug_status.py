@@ -1,7 +1,7 @@
 import os
 import requests
 from cloudwatch import put_cloudwatch
-from switchbot import build_headers, get_device_id, invalidate_device_id, DEVICE_STATUS_ENDPOINT_FORMAT
+from switchbot import build_headers, call_with_retry, DEVICE_STATUS_ENDPOINT_FORMAT
 
 SB_TOKEN = os.environ["SB_TOKEN"]
 SB_SECRET_KEY = os.environ["SB_SECRET_KEY"]
@@ -23,19 +23,8 @@ def lambda_handler(event, context):
             "Value": device_name.replace(" ", ""),
         }]
         try:
-            device_id = get_device_id(SB_TOKEN, SB_SECRET_KEY, device_name)
-            print("{} device id: {}".format(device_name, device_id))
-            try:
-                response = _get_device_status(device_id)
-            except Exception:
-                print("Retrying with fresh device id for {}".format(device_name))
-                invalidate_device_id(device_name)
-                device_id = get_device_id(SB_TOKEN, SB_SECRET_KEY, device_name)
-                print("{} device id (refreshed): {}".format(device_name, device_id))
-                response = _get_device_status(device_id)
-            print(response)
+            response = call_with_retry(SB_TOKEN, SB_SECRET_KEY, device_name, _get_device_status)
         except Exception as e:
-            print(e)
             put_cloudwatch(METRIC_NAMESPACE, "Valid", False, "None", dimensions=dimensions)
             raise e
         put_cloudwatch(METRIC_NAMESPACE, "Valid", True, "None", dimensions=dimensions)
