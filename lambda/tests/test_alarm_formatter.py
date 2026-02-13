@@ -44,13 +44,20 @@ class TestFormatAlarm:
         }
         result = format_alarm(self._make_sns_record(alarm))
         assert result["title"] == "ALARM: HighTemp"
+        assert result["state"] == "ALARM"
         assert "Temperature" in result["body"]
         assert "Meter1 (Meter)" in result["body"]
         assert "> 35" in result["body"]
 
+    def test_state_returned_for_ok(self):
+        alarm = {"NewStateValue": "OK", "AlarmName": "Test"}
+        result = format_alarm(self._make_sns_record(alarm))
+        assert result["state"] == "OK"
+
     def test_missing_fields_use_defaults(self):
         result = format_alarm(self._make_sns_record({}))
         assert result["title"] == "Unknown: Unknown"
+        assert result["state"] == "Unknown"
         assert "Unknown" in result["body"]
 
     def test_invalid_json_message(self):

@@ -15,6 +15,11 @@ def lambda_handler(event, _):
     record = event.get("Records", [{}])[0]
     formatted = format_alarm(record)
 
+    # Skip sending Pushover for OK (recovery) state transitions
+    if formatted.get("state") == "OK":
+        print("Skipping Pushover for OK state")
+        return {"statusCode": 200, "body": "skipped OK state"}
+
     headers = {
         'content-type': 'application/x-www-form-urlencoded',
     }
