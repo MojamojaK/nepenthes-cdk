@@ -114,8 +114,8 @@ describe('EventBridge', () => {
 });
 
 describe('SNS Topics', () => {
-    test('creates 3 SNS topics', () => {
-        template.resourceCountIs('AWS::SNS::Topic', 3);
+    test('creates 4 SNS topics (alarm, formatted, ok-action, low-sev)', () => {
+        template.resourceCountIs('AWS::SNS::Topic', 4);
     });
 
     test('has email subscription on formatted alarm topic', () => {
@@ -200,5 +200,19 @@ describe('CloudWatch Alarms', () => {
             const props = resource.Properties as Record<string, unknown>;
             expect(props.ActionsEnabled).toBe(true);
         }
+    });
+
+    test('high-severity alarms have OK actions for email recovery notifications', () => {
+        const alarms = template.findResources('AWS::CloudWatch::Alarm');
+        // All alarms in the main alarms list should have OKActions
+        let alarmsWithOkActions = 0;
+        for (const [, resource] of Object.entries(alarms)) {
+            const props = resource.Properties as Record<string, unknown>;
+            if (Array.isArray(props.OKActions) && (props.OKActions as unknown[]).length > 0) {
+                alarmsWithOkActions++;
+            }
+        }
+        // 12 high-severity alarms have OK actions (all except the low-sev Pi alarm)
+        expect(alarmsWithOkActions).toBe(12);
     });
 });
