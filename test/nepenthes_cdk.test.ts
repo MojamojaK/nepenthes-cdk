@@ -24,11 +24,11 @@ describe('Constants', () => {
 });
 
 describe('Lambda Functions', () => {
-    test('creates 5 Lambda functions with Python 3.12 runtime', () => {
+    test('creates 5 Lambda functions with Python 3.14 runtime', () => {
         template.resourceCountIs('AWS::Lambda::Function', 5);
 
         template.hasResourceProperties('AWS::Lambda::Function', {
-            Runtime: 'python3.12',
+            Runtime: 'python3.14',
         });
     });
 
