@@ -1,4 +1,5 @@
 import json
+import re
 
 
 COMPARISON_SYMBOLS = {
@@ -9,6 +10,14 @@ COMPARISON_SYMBOLS = {
     "GreaterThanUpperThreshold": "> upper",
     "LessThanLowerThreshold": "< lower",
 }
+
+
+def _extract_recent_values(reason):
+    """Extract recent datapoint values from the CloudWatch alarm reason string."""
+    match = re.search(r'\[([0-9.,\s]+)\]', reason)
+    if not match:
+        return None
+    return match.group(1).strip()
 
 
 def _format_period(seconds):
@@ -62,14 +71,19 @@ def format_alarm(sns_record):
 
     title = f"{new_state}: {alarm_name}"
 
+    recent_values = _extract_recent_values(reason)
+
     body_lines = [
         f"State:     {old_state} -> {new_state}",
         f"Time:      {state_change_time}",
-        f"Reason:    {reason}",
         f"",
         f"Metric:    {metric_name}",
         f"Device:    {dims_str}",
         f"Condition: {statistic} {comp_symbol} {threshold}",
+    ]
+    if recent_values:
+        body_lines.append(f"Recent:    {recent_values}")
+    body_lines += [
         f"Period:    {period_str} ({datapoints_to_alarm}/{evaluation_periods} datapoints)",
         f"Missing:   treated as {treat_missing}",
     ]
