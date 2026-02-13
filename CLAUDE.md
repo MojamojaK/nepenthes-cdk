@@ -36,7 +36,7 @@ npm run build
 npm run test
 
 # Run Python Lambda tests (pytest, 80% coverage threshold)
-cd lambda && uv run pytest tests/ -v
+cd lambda && uv sync && uv run pytest tests/ -v
 
 # CDK operations
 npx cdk diff
