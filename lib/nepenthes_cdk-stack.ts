@@ -87,6 +87,6 @@ export class NepenthesCDKStack extends cdk.Stack {
     nepenthesAlams.nPiInvalidLowSevAlarm.addAlarmAction(new cdk.aws_cloudwatch_actions.SnsAction(nPiInvalidLowSevSNSTopic));
 
     // CloudWatch Dashboard for at-a-glance monitoring
-    new NepenthesDashboard(this);
+    new NepenthesDashboard(this, nepenthesAlams.alarms);
   }
 }
