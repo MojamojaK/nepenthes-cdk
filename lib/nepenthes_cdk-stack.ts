@@ -59,6 +59,13 @@ export class NepenthesCDKStack extends cdk.Stack {
       reason: 'Log stream ARNs require logGroupArn:* suffix; PutMetricData does not support resource-level permissions (scoped by namespace condition)',
     }]);
 
+    // Suppress L1: Python 3.13 is the latest runtime available on AWS Lambda;
+    // cdk-nag flags it because CDK defines 3.14 but AWS has not shipped it yet
+    NagSuppressions.addStackSuppressions(this, [{
+      id: 'AwsSolutions-L1',
+      reason: 'Python 3.13 is the latest Lambda runtime available; 3.14 is defined in CDK but not yet supported by AWS Lambda',
+    }]);
+
     // Setup Schedule to run Online Plug Status Lambda Function per cron schedule
     const onlineMetricSchedule = new cdk.aws_events.Rule(this, "NOnlineMetricRule", {schedule: cdk.aws_events.Schedule.cron({minute: "*/5"})});
     onlineMetricSchedule.addTarget(new cdk.aws_events_targets.LambdaFunction(lambdaFunctions.nepenthesOnlinePlugStatusFunction));
