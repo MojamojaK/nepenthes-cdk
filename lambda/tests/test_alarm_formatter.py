@@ -1,6 +1,6 @@
 import json
 
-from alarm_formatter import format_alarm, _format_period, COMPARISON_SYMBOLS
+from alarm_formatter import format_alarm, _format_period, _extract_recent_values, COMPARISON_SYMBOLS
 
 
 class TestFormatPeriod:
@@ -12,6 +12,22 @@ class TestFormatPeriod:
 
     def test_hours(self):
         assert _format_period(7200) == "2h"
+
+
+class TestExtractRecentValues:
+    def test_extracts_values_from_reason(self):
+        reason = "Threshold Crossed: 30 out of 30 datapoints were greater than the threshold (26.0). The most recent datapoints which crossed the threshold: [27.3, 27.1, 26.8]."
+        assert _extract_recent_values(reason) == "27.3, 27.1, 26.8"
+
+    def test_single_value(self):
+        reason = "Threshold Crossed: 1 out of 1 datapoints [5.0] was less than the threshold."
+        assert _extract_recent_values(reason) == "5.0"
+
+    def test_returns_none_when_no_values(self):
+        assert _extract_recent_values("Threshold crossed") is None
+
+    def test_returns_none_for_empty_string(self):
+        assert _extract_recent_values("") is None
 
 
 class TestFormatAlarm:
@@ -73,6 +89,22 @@ class TestFormatAlarm:
         alarm = {"Trigger": {"Dimensions": []}}
         result = format_alarm(self._make_sns_record(alarm))
         assert "None" in result["body"]
+
+    def test_recent_values_included_when_present(self):
+        alarm = {
+            "NewStateReason": "Threshold Crossed: datapoints [27.3, 27.1, 26.8].",
+            "Trigger": {"Threshold": 26},
+        }
+        result = format_alarm(self._make_sns_record(alarm))
+        assert "Recent:    27.3, 27.1, 26.8" in result["body"]
+
+    def test_recent_values_omitted_when_absent(self):
+        alarm = {
+            "NewStateReason": "Threshold crossed",
+            "Trigger": {"Threshold": 26},
+        }
+        result = format_alarm(self._make_sns_record(alarm))
+        assert "Recent:" not in result["body"]
 
     def test_all_comparison_symbols(self):
         for operator, symbol in COMPARISON_SYMBOLS.items():
