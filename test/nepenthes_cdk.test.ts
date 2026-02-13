@@ -106,9 +106,9 @@ describe('IoT Rule', () => {
 });
 
 describe('EventBridge', () => {
-    test('creates schedule rule with 2-minute cron', () => {
+    test('creates schedule rule with 5-minute cron', () => {
         template.hasResourceProperties('AWS::Events::Rule', {
-            ScheduleExpression: 'cron(*/2 * * * ? *)',
+            ScheduleExpression: 'cron(*/5 * * * ? *)',
         });
     });
 });
