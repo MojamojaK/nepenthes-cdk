@@ -22,6 +22,7 @@ export const METRIC_NAME_BATTERY = "Battery";
 export const METRIC_NAME_VALID = "Valid";
 export const METRIC_NAME_SWITCH = "Switch";
 export const METRIC_NAME_POWER = "Power";
+export const METRIC_NAME_COOLER_FROZEN = "CoolerFrozen";
 
 // Alarm thresholds (single source of truth for alarms and dashboard annotations)
 export const THRESHOLD_TEMPERATURE_HIGH = 26.0;

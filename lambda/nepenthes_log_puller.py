@@ -16,6 +16,11 @@ def lambda_handler(event, context):
     # Publish Heartbeat metric
     put_cloudwatch(METRIC_NAMESPACE, "Heartbeat", should_heartbeat, "None")
 
+    # Publish Cooler Frozen metric
+    cooler_frozen = event.get("cooler_frozen")
+    if cooler_frozen is not None:
+        put_cloudwatch(METRIC_NAMESPACE, "CoolerFrozen", cooler_frozen, "None")
+
     # Publish Meter metrics
     for alias, data in meters.items():
         dimensions = [{
