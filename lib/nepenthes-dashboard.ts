@@ -1,6 +1,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
-import { METRIC_NAMESPACE, THRESHOLD_TEMPERATURE_HIGH, THRESHOLD_TEMPERATURE_LOW,
+import { METRIC_NAMESPACE, METRIC_NAME_COOLER_FROZEN,
+         THRESHOLD_TEMPERATURE_HIGH, THRESHOLD_TEMPERATURE_LOW,
          THRESHOLD_HUMIDITY_LOW, THRESHOLD_BATTERY_LOW,
          METERS, PLUGS, FAN_PLUG_NAME } from './constants';
 
@@ -108,6 +109,19 @@ export class NepenthesDashboard {
             height: 3,
         });
 
+        // Cooler frozen status
+        const coolerFrozenWidget = new cdk.aws_cloudwatch.SingleValueWidget({
+            title: 'Cooler Frozen',
+            metrics: [new cdk.aws_cloudwatch.Metric({
+                namespace: METRIC_NAMESPACE,
+                metricName: METRIC_NAME_COOLER_FROZEN,
+                period: cdk.Duration.minutes(5),
+                statistic: cdk.aws_cloudwatch.Stats.MAXIMUM,
+            })],
+            width: 6,
+            height: 3,
+        });
+
         // Alarm status overview
         const alarmWidget = new cdk.aws_cloudwatch.AlarmStatusWidget({
             title: 'Alarm Status',
@@ -118,6 +132,6 @@ export class NepenthesDashboard {
 
         dashboard.addWidgets(temperatureWidget, humidityWidget);
         dashboard.addWidgets(batteryWidget, deviceStatusWidget);
-        dashboard.addWidgets(heartbeatWidget, fanPowerWidget, alarmWidget);
+        dashboard.addWidgets(heartbeatWidget, fanPowerWidget, coolerFrozenWidget, alarmWidget);
     }
 }
