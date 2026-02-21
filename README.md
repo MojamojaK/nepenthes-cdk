@@ -17,6 +17,50 @@ AWS CDK infrastructure for the Nepenthes home monitoring system. Deploys Lambda 
 - **SNS** — Alarm topic (triggers Pushover + email formatter Lambdas), formatted alarm topic (email delivery), and Pi low-severity topic
 - **CloudWatch Alarms** — Temperature, humidity, battery, heartbeat, plug power/status
 
+## Related Repository
+
+This repo is the **cloud-side infrastructure** — it deploys AWS resources that ingest sensor data, evaluate alarms, and send notifications. The companion repo [**sb-nepenthes-environment**](https://github.com/MojamojaK/sb-nepenthes-environment) is the **device-side application** that runs on a Raspberry Pi Zero W, scanning SwitchBot sensors over BLE, evaluating growing conditions, toggling smart plugs, and pushing telemetry to the cloud via MQTT.
+
+### Data Flow
+
+```
+Raspberry Pi Zero W (sb-nepenthes-environment)          AWS (nepenthes-cdk)
+┌──────────────────────────────────────────┐    ┌──────────────────────────────────────────────┐
+│                                          │    │                                              │
+│  BLE scan (SwitchBot sensors)            │    │  IoT Core                                    │
+│       │                                  │    │    │  topic: log/nepenthes/nhome              │
+│       ▼                                  │    │    ▼                                          │
+│  Evaluate conditions                     │    │  nepenthes_log_puller Lambda                  │
+│  (heartbeat, thresholds)                 │    │    │                                          │
+│       │                                  │    │    ▼                                          │
+│       ├──▶ Toggle plugs (BLE)            │    │  CloudWatch Metrics & Alarms                  │
+│       │                                  │    │    │                                          │
+│       ▼                                  │    │    ├──▶ NAlarmTopic (SNS)                     │
+│  log_push.py ── MQTT ──────────────────────────▶   │    ├──▶ nepenthes_pushover Lambda       │
+│                                          │    │    │    └──▶ nepenthes_alarm_email_formatter  │
+│                                          │    │    │              └──▶ Email (SNS)            │
+│                                          │    │    │                                          │
+│                                          │    │    └──▶ NPiInvalidLowSevTopic (SNS)          │
+│                  ◀── SwitchBot API ──────────────────── nepenthes_pi_plug_on Lambda           │
+│                                          │    │         (power-cycle Pi)                      │
+│                                          │    │                                              │
+│                                          │    │  EventBridge (every 5 min)                    │
+│                                          │    │    └──▶ nepenthes_online_plug_status Lambda   │
+│                  ◀── SwitchBot API ──────────────────── (check plug power/status)             │
+│                                          │    │                                              │
+└──────────────────────────────────────────┘    └──────────────────────────────────────────────┘
+```
+
+### Integration Points
+
+| Integration | Device Side (sb-nepenthes-environment) | Cloud Side (nepenthes-cdk) |
+|---|---|---|
+| **MQTT telemetry** | `executors/log_push.py` publishes state JSON to AWS IoT Core | IoT topic rule on `log/nepenthes/nhome` triggers `nepenthes_log_puller` Lambda, which pushes metrics to CloudWatch |
+| **Heartbeat** | `evaluators/heartbeat.py` includes a heartbeat flag in the MQTT payload | CloudWatch alarm on missing heartbeat triggers `nepenthes_pi_plug_on` to power-cycle the Pi via SwitchBot API |
+| **SwitchBot API credentials** | Uses `SB_TOKEN` / `SB_SECRET_KEY` for BLE device discovery and local plug control | Same credentials used by `nepenthes_online_plug_status` and `nepenthes_pi_plug_on` Lambdas |
+| **Device naming** | Aliases like *N. Meter 1*, *N. Peltier Upper* defined in `config/desired_states.py` | Same names appear in `lib/constants.ts` as CloudWatch metric dimensions |
+| **Monitoring & alerting** | Reads sensors and pushes raw state to the cloud | Processes telemetry into CloudWatch metrics/alarms; sends Pushover + email alerts via SNS |
+
 ## Prerequisites
 
 - [Node.js](https://nodejs.org/) >= 20
