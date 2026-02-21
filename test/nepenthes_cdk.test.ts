@@ -181,6 +181,16 @@ describe('CloudWatch Alarms', () => {
         expect(Object.keys(alarms).length).toBe(2);
     });
 
+    test('creates cooler frozen alarm', () => {
+        const alarms = template.findResources('AWS::CloudWatch::Alarm', {
+            Properties: {
+                MetricName: 'CoolerFrozen',
+                Namespace: 'NHomeZero',
+            },
+        });
+        expect(Object.keys(alarms).length).toBe(1);
+    });
+
     test('creates Pi and Fan switch/power alarms', () => {
         const switchAlarms = template.findResources('AWS::CloudWatch::Alarm', {
             Properties: {
@@ -218,8 +228,8 @@ describe('CloudWatch Alarms', () => {
                 alarmsWithOkActions++;
             }
         }
-        // 12 high-severity alarms have OK actions (all except the low-sev Pi alarm)
-        expect(alarmsWithOkActions).toBe(12);
+        // 13 high-severity alarms have OK actions (all except the low-sev Pi alarm)
+        expect(alarmsWithOkActions).toBe(13);
     });
 });
 

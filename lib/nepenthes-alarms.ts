@@ -1,7 +1,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
-import { METRIC_NAMESPACE, METRIC_NAME_BATTERY, METRIC_NAME_HEARTBEAT, METRIC_NAME_HUMIDITY,
-         METRIC_NAME_POWER, METRIC_NAME_SWITCH, METRIC_NAME_TEMPERATURE,
+import { METRIC_NAMESPACE, METRIC_NAME_BATTERY, METRIC_NAME_COOLER_FROZEN, METRIC_NAME_HEARTBEAT,
+         METRIC_NAME_HUMIDITY, METRIC_NAME_POWER, METRIC_NAME_SWITCH, METRIC_NAME_TEMPERATURE,
          THRESHOLD_TEMPERATURE_HIGH, THRESHOLD_TEMPERATURE_LOW,
          THRESHOLD_HUMIDITY_LOW, THRESHOLD_BATTERY_LOW,
          METERS, PI_PLUG_NAME, FAN_PLUG_NAME } from './constants';
@@ -166,6 +166,21 @@ export class NepenthesAlarms {
             }),
         })
 
+        const coolerFrozenAlarm = new cdk.aws_cloudwatch.Alarm(scope, "NCoolerFrozenAlarm", {
+            actionsEnabled: true,
+            datapointsToAlarm: 1,
+            evaluationPeriods: 1,
+            treatMissingData: cdk.aws_cloudwatch.TreatMissingData.IGNORE,
+            comparisonOperator: cdk.aws_cloudwatch.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+            threshold: 1,
+            metric: new cdk.aws_cloudwatch.Metric({
+                namespace: METRIC_NAMESPACE,
+                metricName: METRIC_NAME_COOLER_FROZEN,
+                period: cdk.Duration.minutes(5),
+                statistic: cdk.aws_cloudwatch.Stats.MAXIMUM,
+            }),
+        });
+
         this.alarms = [
             heartBeatMissingAlarm,
             ...highTemperatureAlarms,
@@ -175,6 +190,7 @@ export class NepenthesAlarms {
             piOffline,
             fanNotDrawingPower,
             fanOffline,
+            coolerFrozenAlarm,
         ];
 
         this.nPiInvalidLowSevAlarm = new cdk.aws_cloudwatch.Alarm(scope, "NPiInvalidLowSev", {
