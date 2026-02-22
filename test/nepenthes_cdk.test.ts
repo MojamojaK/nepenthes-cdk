@@ -150,16 +150,25 @@ describe('CloudWatch Alarms', () => {
     });
 
     test('creates temperature alarms for both meters', () => {
-        // Temperature alarms use metric math (actual - desired / desired - actual)
         const allAlarms = template.findResources('AWS::CloudWatch::Alarm');
         const tempAlarms = Object.entries(allAlarms).filter(([key]) =>
             key.includes('Temperature')
         );
-        // 2 high + 2 low = 4 temperature alarms
-        expect(tempAlarms.length).toBe(4);
+        // 4 absolute (2 high + 2 low) + 4 diff (2 high + 2 low) = 8
+        expect(tempAlarms.length).toBe(8);
 
-        // Verify they use metric math expressions
-        for (const [, resource] of tempAlarms) {
+        // Verify absolute alarms use simple metric
+        const absAlarms = tempAlarms.filter(([key]) => !key.includes('Diff'));
+        expect(absAlarms.length).toBe(4);
+        for (const [, resource] of absAlarms) {
+            const props = resource.Properties as Record<string, unknown>;
+            expect(props.MetricName).toBe('Temperature');
+        }
+
+        // Verify diff alarms use metric math expressions
+        const diffAlarms = tempAlarms.filter(([key]) => key.includes('Diff'));
+        expect(diffAlarms.length).toBe(4);
+        for (const [, resource] of diffAlarms) {
             const props = resource.Properties as Record<string, unknown>;
             const metrics = props.Metrics as Array<Record<string, unknown>>;
             expect(metrics).toBeDefined();
@@ -235,8 +244,8 @@ describe('CloudWatch Alarms', () => {
                 alarmsWithOkActions++;
             }
         }
-        // 13 high-severity alarms have OK actions (all except the low-sev Pi alarm)
-        expect(alarmsWithOkActions).toBe(13);
+        // 17 high-severity alarms have OK actions (all except the low-sev Pi alarm)
+        expect(alarmsWithOkActions).toBe(17);
     });
 });
 
