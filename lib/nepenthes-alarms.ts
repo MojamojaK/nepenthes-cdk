@@ -77,7 +77,7 @@ export class NepenthesAlarms {
         const highTemperatureDiffAlarms = METERS.map((meterAlias) => {
             const escapedAlias = meterAlias.replace(/ /g, "")
             const expr = new cdk.aws_cloudwatch.MathExpression({
-                expression: 'actual - desired',
+                expression: 'actual - FILL(desired, actual)',
                 usingMetrics: {
                     actual: new cdk.aws_cloudwatch.Metric({
                         namespace: METRIC_NAMESPACE,
@@ -102,7 +102,7 @@ export class NepenthesAlarms {
         const lowTemperatureDiffAlarms = METERS.map((meterAlias) => {
             const escapedAlias = meterAlias.replace(/ /g, "")
             const expr = new cdk.aws_cloudwatch.MathExpression({
-                expression: 'desired - actual',
+                expression: 'FILL(desired, actual) - actual',
                 usingMetrics: {
                     actual: new cdk.aws_cloudwatch.Metric({
                         namespace: METRIC_NAMESPACE,
