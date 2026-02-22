@@ -23,10 +23,12 @@ export const METRIC_NAME_VALID = "Valid";
 export const METRIC_NAME_SWITCH = "Switch";
 export const METRIC_NAME_POWER = "Power";
 export const METRIC_NAME_COOLER_FROZEN = "CoolerFrozen";
+export const METRIC_NAME_DESIRED_TEMPERATURE = "DesiredTemperature";
 
 // Alarm thresholds (single source of truth for alarms and dashboard annotations)
-export const THRESHOLD_TEMPERATURE_HIGH = 26.0;
-export const THRESHOLD_TEMPERATURE_LOW = 10.0;
+// Temperature offsets: alarm fires when actual deviates from desired by this amount
+export const THRESHOLD_TEMPERATURE_HIGH_OFFSET = 8.0;
+export const THRESHOLD_TEMPERATURE_LOW_OFFSET = 8.0;
 export const THRESHOLD_HUMIDITY_LOW = 50.0;
 export const THRESHOLD_BATTERY_LOW = 5;
 

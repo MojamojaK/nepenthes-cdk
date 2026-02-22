@@ -1,7 +1,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { METRIC_NAMESPACE, METRIC_NAME_COOLER_FROZEN,
-         THRESHOLD_TEMPERATURE_HIGH, THRESHOLD_TEMPERATURE_LOW,
+         METRIC_NAME_DESIRED_TEMPERATURE,
          THRESHOLD_HUMIDITY_LOW, THRESHOLD_BATTERY_LOW,
          METERS, PLUGS, FAN_PLUG_NAME } from './constants';
 
@@ -14,17 +14,22 @@ export class NepenthesDashboard {
         // Temperature graph with alarm thresholds
         const temperatureWidget = new cdk.aws_cloudwatch.GraphWidget({
             title: 'Temperature',
-            left: METERS.map(meter => new cdk.aws_cloudwatch.Metric({
-                namespace: METRIC_NAMESPACE,
-                metricName: 'Temperature',
-                dimensionsMap: { Meter: meter },
-                period: cdk.Duration.minutes(2),
-                statistic: cdk.aws_cloudwatch.Stats.AVERAGE,
-                label: meter,
-            })),
-            leftAnnotations: [
-                { value: THRESHOLD_TEMPERATURE_HIGH, color: '#d62728', label: 'High threshold' },
-                { value: THRESHOLD_TEMPERATURE_LOW, color: '#1f77b4', label: 'Low threshold' },
+            left: [
+                ...METERS.map(meter => new cdk.aws_cloudwatch.Metric({
+                    namespace: METRIC_NAMESPACE,
+                    metricName: 'Temperature',
+                    dimensionsMap: { Meter: meter },
+                    period: cdk.Duration.minutes(2),
+                    statistic: cdk.aws_cloudwatch.Stats.AVERAGE,
+                    label: meter,
+                })),
+                new cdk.aws_cloudwatch.Metric({
+                    namespace: METRIC_NAMESPACE,
+                    metricName: METRIC_NAME_DESIRED_TEMPERATURE,
+                    period: cdk.Duration.minutes(2),
+                    statistic: cdk.aws_cloudwatch.Stats.AVERAGE,
+                    label: 'Desired',
+                }),
             ],
             width: 12,
             height: 6,

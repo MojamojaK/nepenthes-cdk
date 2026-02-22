@@ -131,6 +131,20 @@ class TestLogPullerHandler:
         assert "CoolerFrozen" not in metric_names
 
     @patch("nepenthes_log_puller.put_cloudwatch")
+    def test_desired_temperature_published_when_present(self, mock_cw):
+        event = {"should_heartbeat": 1, "desired_temperature": 18.0, "meters": {"v0": {}}, "plugs": {"v0": {}}}
+        lambda_handler(event, None)
+        mock_cw.assert_any_call("TestNamespace", "DesiredTemperature", 18.0, "None")
+
+    @patch("nepenthes_log_puller.put_cloudwatch")
+    def test_desired_temperature_not_published_when_absent(self, mock_cw):
+        event = {"should_heartbeat": 1, "meters": {"v0": {}}, "plugs": {"v0": {}}}
+        lambda_handler(event, None)
+        call_args_list = [c.args for c in mock_cw.call_args_list]
+        metric_names = [args[1] for args in call_args_list]
+        assert "DesiredTemperature" not in metric_names
+
+    @patch("nepenthes_log_puller.put_cloudwatch")
     def test_battery_not_published_outside_schedule(self, mock_cw):
         event = {
             "should_heartbeat": 0,

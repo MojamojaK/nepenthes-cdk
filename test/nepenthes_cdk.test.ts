@@ -150,15 +150,22 @@ describe('CloudWatch Alarms', () => {
     });
 
     test('creates temperature alarms for both meters', () => {
-        // High temp alarms (Meter 1 and Meter 2)
-        const alarms = template.findResources('AWS::CloudWatch::Alarm', {
-            Properties: {
-                MetricName: 'Temperature',
-                Namespace: 'NHomeZero',
-            },
-        });
+        // Temperature alarms use metric math (actual - desired / desired - actual)
+        const allAlarms = template.findResources('AWS::CloudWatch::Alarm');
+        const tempAlarms = Object.entries(allAlarms).filter(([key]) =>
+            key.includes('Temperature')
+        );
         // 2 high + 2 low = 4 temperature alarms
-        expect(Object.keys(alarms).length).toBe(4);
+        expect(tempAlarms.length).toBe(4);
+
+        // Verify they use metric math expressions
+        for (const [, resource] of tempAlarms) {
+            const props = resource.Properties as Record<string, unknown>;
+            const metrics = props.Metrics as Array<Record<string, unknown>>;
+            expect(metrics).toBeDefined();
+            const expressions = metrics.filter(m => m.Expression);
+            expect(expressions.length).toBe(1);
+        }
     });
 
     test('creates humidity alarms for both meters', () => {
