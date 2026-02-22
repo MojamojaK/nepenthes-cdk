@@ -2,7 +2,8 @@ import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { METRIC_NAMESPACE, METRIC_NAME_BATTERY, METRIC_NAME_COOLER_FROZEN, METRIC_NAME_HEARTBEAT,
          METRIC_NAME_HUMIDITY, METRIC_NAME_POWER, METRIC_NAME_SWITCH, METRIC_NAME_TEMPERATURE,
-         THRESHOLD_TEMPERATURE_HIGH, THRESHOLD_TEMPERATURE_LOW,
+         METRIC_NAME_DESIRED_TEMPERATURE,
+         THRESHOLD_TEMPERATURE_HIGH_OFFSET, THRESHOLD_TEMPERATURE_LOW_OFFSET,
          THRESHOLD_HUMIDITY_LOW, THRESHOLD_BATTERY_LOW,
          METERS, PI_PLUG_NAME, FAN_PLUG_NAME } from './constants';
 
@@ -28,46 +29,61 @@ export class NepenthesAlarms {
             }),
         });
 
+        const desiredTempMetric = new cdk.aws_cloudwatch.Metric({
+            namespace: METRIC_NAMESPACE,
+            metricName: METRIC_NAME_DESIRED_TEMPERATURE,
+            period: cdk.Duration.minutes(2),
+            statistic: cdk.aws_cloudwatch.Stats.AVERAGE,
+        });
+
         const highTemperatureAlarms = METERS.map((meterAlias) => {
             const escapedAlias = meterAlias.replace(/ /g, "")
-            return new cdk.aws_cloudwatch.Alarm(scope, `${escapedAlias}TemperatureHighAlarm`, {
+            const expr = new cdk.aws_cloudwatch.MathExpression({
+                expression: 'actual - desired',
+                usingMetrics: {
+                    actual: new cdk.aws_cloudwatch.Metric({
+                        namespace: METRIC_NAMESPACE,
+                        metricName: METRIC_NAME_TEMPERATURE,
+                        dimensionsMap: { "Meter": meterAlias },
+                        period: cdk.Duration.minutes(2),
+                        statistic: cdk.aws_cloudwatch.Stats.MINIMUM,
+                    }),
+                    desired: desiredTempMetric,
+                },
+            });
+            return expr.createAlarm(scope, `${escapedAlias}TemperatureHighAlarm`, {
                 actionsEnabled: true,
                 datapointsToAlarm: 30,
                 evaluationPeriods: 30,
                 treatMissingData: cdk.aws_cloudwatch.TreatMissingData.IGNORE,
-                comparisonOperator:  cdk.aws_cloudwatch.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
-                threshold: THRESHOLD_TEMPERATURE_HIGH,
-                metric: new cdk.aws_cloudwatch.Metric({
-                    namespace: METRIC_NAMESPACE,
-                    metricName: METRIC_NAME_TEMPERATURE,
-                    dimensionsMap: {
-                        "Meter": meterAlias,
-                    },
-                    period: cdk.Duration.minutes(2),
-                    statistic: cdk.aws_cloudwatch.Stats.MINIMUM,
-                }),
-            })
+                comparisonOperator: cdk.aws_cloudwatch.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+                threshold: THRESHOLD_TEMPERATURE_HIGH_OFFSET,
+            });
         });
 
         const lowTemperatureAlarms = METERS.map((meterAlias) => {
             const escapedAlias = meterAlias.replace(/ /g, "")
-            return new cdk.aws_cloudwatch.Alarm(scope, `${escapedAlias}TemperatureLowAlarm`, {
+            const expr = new cdk.aws_cloudwatch.MathExpression({
+                expression: 'desired - actual',
+                usingMetrics: {
+                    actual: new cdk.aws_cloudwatch.Metric({
+                        namespace: METRIC_NAMESPACE,
+                        metricName: METRIC_NAME_TEMPERATURE,
+                        dimensionsMap: { "Meter": meterAlias },
+                        period: cdk.Duration.minutes(2),
+                        statistic: cdk.aws_cloudwatch.Stats.MAXIMUM,
+                    }),
+                    desired: desiredTempMetric,
+                },
+            });
+            return expr.createAlarm(scope, `${escapedAlias}TemperatureLowAlarm`, {
                 actionsEnabled: true,
                 datapointsToAlarm: 30,
                 evaluationPeriods: 30,
                 treatMissingData: cdk.aws_cloudwatch.TreatMissingData.IGNORE,
-                comparisonOperator:  cdk.aws_cloudwatch.ComparisonOperator.LESS_THAN_OR_EQUAL_TO_THRESHOLD,
-                threshold: THRESHOLD_TEMPERATURE_LOW,
-                metric: new cdk.aws_cloudwatch.Metric({
-                    namespace: METRIC_NAMESPACE,
-                    metricName: METRIC_NAME_TEMPERATURE,
-                    dimensionsMap: {
-                        "Meter": meterAlias,
-                    },
-                    period: cdk.Duration.minutes(2),
-                    statistic: cdk.aws_cloudwatch.Stats.MAXIMUM,
-                }),
-            })
+                comparisonOperator: cdk.aws_cloudwatch.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+                threshold: THRESHOLD_TEMPERATURE_LOW_OFFSET,
+            });
         });
 
         const lowHumidityAlarms = METERS.map((meterAlias) => {

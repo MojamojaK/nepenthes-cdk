@@ -21,6 +21,11 @@ def lambda_handler(event, context):
     if cooler_frozen is not None:
         put_cloudwatch(METRIC_NAMESPACE, "CoolerFrozen", cooler_frozen, "None")
 
+    # Publish Desired Temperature metric
+    desired_temperature = event.get("desired_temperature")
+    if desired_temperature is not None:
+        put_cloudwatch(METRIC_NAMESPACE, "DesiredTemperature", desired_temperature, "None")
+
     # Publish Meter metrics
     for alias, data in meters.items():
         dimensions = [{
