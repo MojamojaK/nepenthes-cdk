@@ -21,11 +21,6 @@ def lambda_handler(event, context):
     if cooler_frozen is not None:
         put_cloudwatch(METRIC_NAMESPACE, "CoolerFrozen", cooler_frozen, "None")
 
-    # Publish Desired Temperature metric
-    desired_temperature = event.get("desired_temperature")
-    if desired_temperature is not None:
-        put_cloudwatch(METRIC_NAMESPACE, "DesiredTemperature", desired_temperature, "None")
-
     # Publish Meter metrics
     for alias, data in meters.items():
         dimensions = [{
@@ -41,6 +36,11 @@ def lambda_handler(event, context):
             put_cloudwatch(METRIC_NAMESPACE, "Battery", data["BatteryVoltage"], "Percent", timestamp=timestamp, dimensions=dimensions)
         put_cloudwatch(METRIC_NAMESPACE, "Humidity", data["Humidity"], "Percent", timestamp=timestamp, dimensions=dimensions)
         put_cloudwatch(METRIC_NAMESPACE, "Temperature", data["Temperature"], "None", timestamp=timestamp, dimensions=dimensions)
+        desired = data.get("Desired", {})
+        if "Temperature" in desired:
+            put_cloudwatch(METRIC_NAMESPACE, "DesiredTemperature", desired["Temperature"], "None", timestamp=timestamp, dimensions=dimensions)
+        if "TemperatureDiff" in desired:
+            put_cloudwatch(METRIC_NAMESPACE, "TemperatureDiff", desired["TemperatureDiff"], "None", timestamp=timestamp, dimensions=dimensions)
         
     # Publish Plug metrics
     for alias, data in plugs.items():
