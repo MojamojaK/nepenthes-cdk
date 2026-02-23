@@ -16,21 +16,24 @@ export class NepenthesDashboard {
         const temperatureWidget = new cdk.aws_cloudwatch.GraphWidget({
             title: 'Temperature',
             left: [
-                ...METERS.map(meter => new cdk.aws_cloudwatch.Metric({
-                    namespace: METRIC_NAMESPACE,
-                    metricName: 'Temperature',
-                    dimensionsMap: { Meter: meter },
-                    period: cdk.Duration.minutes(2),
-                    statistic: cdk.aws_cloudwatch.Stats.AVERAGE,
-                    label: meter,
-                })),
-                new cdk.aws_cloudwatch.Metric({
-                    namespace: METRIC_NAMESPACE,
-                    metricName: METRIC_NAME_DESIRED_TEMPERATURE,
-                    period: cdk.Duration.minutes(2),
-                    statistic: cdk.aws_cloudwatch.Stats.AVERAGE,
-                    label: 'Desired',
-                }),
+                ...METERS.flatMap(meter => [
+                    new cdk.aws_cloudwatch.Metric({
+                        namespace: METRIC_NAMESPACE,
+                        metricName: 'Temperature',
+                        dimensionsMap: { Meter: meter },
+                        period: cdk.Duration.minutes(2),
+                        statistic: cdk.aws_cloudwatch.Stats.AVERAGE,
+                        label: meter,
+                    }),
+                    new cdk.aws_cloudwatch.Metric({
+                        namespace: METRIC_NAMESPACE,
+                        metricName: METRIC_NAME_DESIRED_TEMPERATURE,
+                        dimensionsMap: { Meter: meter },
+                        period: cdk.Duration.minutes(2),
+                        statistic: cdk.aws_cloudwatch.Stats.AVERAGE,
+                        label: `${meter} Desired`,
+                    }),
+                ]),
             ],
             leftAnnotations: [
                 { value: THRESHOLD_TEMPERATURE_HIGH, color: '#d62728', label: 'High threshold' },

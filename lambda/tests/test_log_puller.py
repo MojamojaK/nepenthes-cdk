@@ -131,18 +131,54 @@ class TestLogPullerHandler:
         assert "CoolerFrozen" not in metric_names
 
     @patch("nepenthes_log_puller.put_cloudwatch")
-    def test_desired_temperature_published_when_present(self, mock_cw):
-        event = {"should_heartbeat": 1, "desired_temperature": 18.0, "meters": {"v0": {}}, "plugs": {"v0": {}}}
+    def test_desired_metrics_published_from_meter_desired_field(self, mock_cw):
+        event = {
+            "should_heartbeat": 1,
+            "meters": {
+                "v0": {
+                    "Meter 1": {
+                        "Valid": True,
+                        "Temperature": 22.5,
+                        "Humidity": 75.0,
+                        "BatteryVoltage": 95,
+                        "Datetime": "2024-01-15T12:00:00",
+                        "Desired": {
+                            "Temperature": 18.0,
+                            "TemperatureDiff": -4.5,
+                        },
+                    }
+                }
+            },
+            "plugs": {"v0": {}},
+        }
         lambda_handler(event, None)
-        mock_cw.assert_any_call("TestNamespace", "DesiredTemperature", 18.0, "None")
+        dims = [{"Name": "Meter", "Value": "Meter 1"}]
+        ts = datetime.datetime.fromisoformat("2024-01-15T12:00:00")
+        mock_cw.assert_any_call("TestNamespace", "DesiredTemperature", 18.0, "None", timestamp=ts, dimensions=dims)
+        mock_cw.assert_any_call("TestNamespace", "TemperatureDiff", -4.5, "None", timestamp=ts, dimensions=dims)
 
     @patch("nepenthes_log_puller.put_cloudwatch")
-    def test_desired_temperature_not_published_when_absent(self, mock_cw):
-        event = {"should_heartbeat": 1, "meters": {"v0": {}}, "plugs": {"v0": {}}}
+    def test_desired_metrics_not_published_when_absent(self, mock_cw):
+        event = {
+            "should_heartbeat": 1,
+            "meters": {
+                "v0": {
+                    "Meter 1": {
+                        "Valid": True,
+                        "Temperature": 22.5,
+                        "Humidity": 75.0,
+                        "BatteryVoltage": 95,
+                        "Datetime": "2024-01-15T14:30:00",
+                    }
+                }
+            },
+            "plugs": {"v0": {}},
+        }
         lambda_handler(event, None)
         call_args_list = [c.args for c in mock_cw.call_args_list]
         metric_names = [args[1] for args in call_args_list]
         assert "DesiredTemperature" not in metric_names
+        assert "TemperatureDiff" not in metric_names
 
     @patch("nepenthes_log_puller.put_cloudwatch")
     def test_battery_not_published_outside_schedule(self, mock_cw):

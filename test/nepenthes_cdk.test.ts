@@ -157,7 +157,7 @@ describe('CloudWatch Alarms', () => {
         // 4 absolute (2 high + 2 low) + 4 diff (2 high + 2 low) = 8
         expect(tempAlarms.length).toBe(8);
 
-        // Verify absolute alarms use simple metric
+        // Verify absolute alarms use Temperature metric
         const absAlarms = tempAlarms.filter(([key]) => !key.includes('Diff'));
         expect(absAlarms.length).toBe(4);
         for (const [, resource] of absAlarms) {
@@ -165,15 +165,12 @@ describe('CloudWatch Alarms', () => {
             expect(props.MetricName).toBe('Temperature');
         }
 
-        // Verify diff alarms use metric math expressions
+        // Verify diff alarms use TemperatureDiff metric
         const diffAlarms = tempAlarms.filter(([key]) => key.includes('Diff'));
         expect(diffAlarms.length).toBe(4);
         for (const [, resource] of diffAlarms) {
             const props = resource.Properties as Record<string, unknown>;
-            const metrics = props.Metrics as Array<Record<string, unknown>>;
-            expect(metrics).toBeDefined();
-            const expressions = metrics.filter(m => m.Expression);
-            expect(expressions.length).toBe(1);
+            expect(props.MetricName).toBe('TemperatureDiff');
         }
     });
 

@@ -24,6 +24,7 @@ export const METRIC_NAME_SWITCH = "Switch";
 export const METRIC_NAME_POWER = "Power";
 export const METRIC_NAME_COOLER_FROZEN = "CoolerFrozen";
 export const METRIC_NAME_DESIRED_TEMPERATURE = "DesiredTemperature";
+export const METRIC_NAME_TEMPERATURE_DIFF = "TemperatureDiff";
 
 // Alarm thresholds (single source of truth for alarms and dashboard annotations)
 export const THRESHOLD_TEMPERATURE_HIGH = 26.0;
