@@ -3,7 +3,7 @@ import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as logs from 'aws-cdk-lib/aws-logs';
 import * as path from 'path';
-import { BundlingOutput, Duration, ILocalBundling, RemovalPolicy } from 'aws-cdk-lib';
+import { BundlingOutput, Duration, ILocalBundling, RemovalPolicy, Stack, Validations } from 'aws-cdk-lib';
 import { execSync } from 'child_process';
 import { copyFileSync, mkdirSync, readdirSync, statSync } from 'fs';
 import * as CONSTANTS from './constants';
@@ -29,6 +29,11 @@ function createLambdaRole(scope: Construct, id: string, logGroup: logs.LogGroup)
         actions: ['logs:CreateLogStream', 'logs:PutLogEvents'],
         resources: [logGroup.logGroupArn, `${logGroup.logGroupArn}:*`],
     }));
+    const logGroupLogicalId = Stack.of(scope).getLogicalId(logGroup.node.defaultChild as logs.CfnLogGroup);
+    Validations.of(role).acknowledge({
+        id: `AwsSolutions-IAM5[Resource::<${logGroupLogicalId}.Arn>:*]`,
+        reason: 'Log stream ARNs require the logGroupArn:* suffix; this is the tightest scope possible',
+    });
     return role;
 }
 
