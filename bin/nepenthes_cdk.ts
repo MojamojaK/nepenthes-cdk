@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import 'source-map-support/register';
 import * as cdk from 'aws-cdk-lib';
-import { Aspects } from 'aws-cdk-lib';
+import { Validations } from 'aws-cdk-lib';
 import { AwsSolutionsChecks } from 'cdk-nag';
 import { NepenthesCDKStack } from '../lib/nepenthes_cdk-stack';
 
@@ -22,4 +22,4 @@ new NepenthesCDKStack(app, 'NepenthesCDKStack', {
   /* For more information, see https://docs.aws.amazon.com/cdk/latest/guide/environments.html */
 });
 
-Aspects.of(app).add(new AwsSolutionsChecks());
+Validations.of(app).addPlugins(new AwsSolutionsChecks(app));

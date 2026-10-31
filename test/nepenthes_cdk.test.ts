@@ -1,5 +1,6 @@
 import * as cdk from 'aws-cdk-lib';
 import { Template } from 'aws-cdk-lib/assertions';
+import { AwsSolutionsChecks } from 'cdk-nag';
 import { NepenthesCDKStack } from '../lib/nepenthes_cdk-stack';
 
 let template: Template;
@@ -253,5 +254,14 @@ describe('Dashboard', () => {
         template.hasResourceProperties('AWS::CloudWatch::Dashboard', {
             DashboardName: 'NHome-Nepenthes',
         });
+    });
+});
+
+describe('cdk-nag', () => {
+    test('stack passes AwsSolutions checks', () => {
+        const app = new cdk.App();
+        cdk.Validations.of(app).addPlugins(new AwsSolutionsChecks(app));
+        new NepenthesCDKStack(app, 'NagStack');
+        expect(() => app.synth()).not.toThrow();
     });
 });

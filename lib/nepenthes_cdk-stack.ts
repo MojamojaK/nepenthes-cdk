@@ -1,6 +1,5 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
-import { NagSuppressions } from 'cdk-nag';
 import { LambdaFunctions } from './lambda-functions';
 import { EMAIL_ADDRESS, METRIC_NAMESPACE } from './constants';
 import { NepenthesAlarms } from './nepenthes-alarms';
@@ -46,18 +45,13 @@ export class NepenthesCDKStack extends cdk.Stack {
     lambdaFunctions.nepenthesLogPullerFunction.role!.addToPrincipalPolicy(putMetricPolicy);
     lambdaFunctions.nepenthesOnlinePlugStatusFunction.role!.addToPrincipalPolicy(putMetricPolicy);
 
-    // Suppress IAM5: log stream ARNs require logGroupArn:* suffix (tightest scope possible),
-    // and cloudwatch:PutMetricData does not support resource-level permissions (scoped by namespace condition)
-    NagSuppressions.addResourceSuppressionsByPath(this, [
-      `/${id}/NLogPullerRole/DefaultPolicy/Resource`,
-      `/${id}/NPushoverRole/DefaultPolicy/Resource`,
-      `/${id}/NAlarmEmailFormatterRole/DefaultPolicy/Resource`,
-      `/${id}/NOnlinePlugStatusRole/DefaultPolicy/Resource`,
-      `/${id}/NPiPlugOnRole/DefaultPolicy/Resource`,
-    ], [{
-      id: 'AwsSolutions-IAM5',
-      reason: 'Log stream ARNs require logGroupArn:* suffix; PutMetricData does not support resource-level permissions (scoped by namespace condition)',
-    }]);
+    // cloudwatch:PutMetricData does not support resource-level permissions (scoped by namespace condition)
+    for (const fn of [lambdaFunctions.nepenthesLogPullerFunction, lambdaFunctions.nepenthesOnlinePlugStatusFunction]) {
+      cdk.Validations.of(fn.role!).acknowledge({
+        id: 'AwsSolutions-IAM5[Resource::*]',
+        reason: 'PutMetricData does not support resource-level permissions; scoped by cloudwatch:namespace condition',
+      });
+    }
 
     // Setup Schedule to run Online Plug Status Lambda Function per cron schedule
     const onlineMetricSchedule = new cdk.aws_events.Rule(this, "NOnlineMetricRule", {schedule: cdk.aws_events.Schedule.cron({minute: "*/5"})});
